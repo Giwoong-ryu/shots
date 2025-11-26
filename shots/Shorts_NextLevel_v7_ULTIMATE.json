@@ -1,0 +1,1044 @@
+{
+  "name": "Shorts_NextLevel_v7_ULTIMATE",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "minutes": 0
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1980,
+        -1400
+      ],
+      "id": "trigger_schedule",
+      "name": "Daily Trigger"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "shorts-v7",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1980,
+        -1200
+      ],
+      "id": "webhook_start",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.body.trigger_type }}",
+              "rightValue": "generate_narration",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1760,
+        -1300
+      ],
+      "id": "router_trigger",
+      "name": "If: Generate New?"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare Data for New Script\nconst body = $input.item.json.body || {};\nreturn {\n  json: {\n    title: body.title || \"Latest AI News\",\n    summary: body.summary || \"AI technology is evolving fast...\",\n    newsContent: body.newsContent || \"\",\n    row_number: body.row_number || 0\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1540,
+        -1420
+      ],
+      "id": "prep_new_data",
+      "name": "Prepare New Data"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# News Contents:\n- title: \"{{ $json.title }}\",\n- {{ $json.summary }}\n- Content: \"{{ $json.newsContent }}\",\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# System Prompt: 뉴스정보를 유투브 쇼츠 용 'narration'으로 재구성 하기\n\n## Overview\n당신은 유튜브 쇼츠 'narration'을 생성하는 전문가입니다. 사용자가 제공하는 'News Contents'를 6문장으로 이루어진 쇼츠 용 'narration'으로 재구성하세요. 아래 주어진 규칙을 반드시 정확하게 지키세요.\n\n'News Contents'가 주어지면 6문장으로 이루어진 Narration을 작성합니다. \n\n## Writing Style Reference\n\"마크 저크버그가 판을 크게 벌이고 있습니다. 메타의 슈퍼인텔리전스 출범 이야기입니다. 얼마전 143억 달러 거액을 주고 스케일 AI의 알렉산더 왕을 영입했었지요. AI 핵심 인재 11명을 추가로 스카우트해 새로운 AI 조직을 만든 것입니다. 현재 퍼플렉시티, 런웨이 AI 등 굵직한 AI 업체들과 인수합병도 진행 중이라고 합니다. 앞으로 오픈AI, 구글 등 선두 AI 업체들과의 경쟁이 치열해 지겠네요.\"\n\n## Rules   \n1. 문장 6개로 'narration'을 작성합니다. \n2. 한 문장의 길이는 40자 내외입니다. \n2. 전체 분량은 250자 내외입니다.\n3. 내용  \n   - 문장1: Hook 문장 (흥미를 끌만한 사실로 매력적인 오프닝)\n   - 문장2~문장6: 디테일한 뉴스 전달 (구체적인 브랜드명 인물명 수치 인용)\n4. 제공된 'Writing Style Reference'와 똑같은 어투(종결 표현, 어미, 호흡 등)를 복사합니다. \n5. 반말, 번역체, 뻔한 문구 금지\n\n## Failure Controls\n⚠️ 문장 갯수가 부족하거나 초과 시:\n\"❌ sentence count is X, expected 6\" 같은 오류 메시지를 출력하고 재시도해주세요.\n\n⚠️ 스타일 불일치 시:\n\"❌ 'Writing Style Reference' is X, expected 'copy the style'\" 같은 오류 메시지를 출력하고 재시도해주세요.\n\n# OUTPUT 형식  \n```json\n{\n  \"narration\": \"문장1 + 문장2 + 문장3 + 문장4 + 문장5 + 문장6\",\n  \"sentence\": {\n    \"sentence 0\": \"문장1\",\n    \"sentence 1\": \"문장2\",\n    \"sentence 2\": \"문장3\",\n    \"sentence 3\": \"문장4\",\n    \"sentence 4\": \"문장5\",\n    \"sentence 5\": \"문장6\"\n  }\n}\n```"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -1320,
+        -1420
+      ],
+      "id": "agent_script",
+      "name": "Narration Script Generate"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "GPT-5-MINI",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "options": {
+          "temperature": 0.7,
+          "maxTokens": 2000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -1320,
+        -1260
+      ],
+      "id": "model_script",
+      "name": "GPT-5.1 Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"narration\": \"문장1 + 문장2...\",\n  \"sentence\": {\n    \"sentence 0\": \"문장1\",\n    \"sentence 1\": \"문장2\",\n    \"sentence 2\": \"문장3\",\n    \"sentence 3\": \"문장4\",\n    \"sentence 4\": \"문장5\",\n    \"sentence 5\": \"문장6\"\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1,
+      "position": [
+        -1160,
+        -1420
+      ],
+      "id": "parser_script",
+      "name": "Script Parser"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Shorts Automation"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -980,
+        -1420
+      ],
+      "id": "log_script",
+      "name": "Log Script (AutoMap)",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare Sentences with Fallback\nconst input = items[0].json;\nconst rowNumber = input.row_number || 0;\nlet narrationText = input.output?.narration || input.body?.narration_confirmed || \"\";\n\nif (!narrationText) throw new Error(\"No narration text found!\");\n\nlet splitSentences = narrationText.split(/[.!?。]\\s*/).filter(s => s.trim());\nif (splitSentences.length !== 6) {\n  const newlineSplit = narrationText.split('\\n').filter(s => s.trim());\n  if (newlineSplit.length >= 2) splitSentences = newlineSplit;\n}\nif (splitSentences.length !== 6) {\n  const avgLength = Math.ceil(narrationText.length / 6);\n  const parts = [];\n  let pos = 0;\n  for (let i = 0; i < 6; i++) {\n    let end = (i === 5) ? narrationText.length : pos + avgLength;\n    parts.push(narrationText.slice(pos, end).trim());\n    pos = end;\n  }\n  splitSentences = parts.filter(s => s);\n}\nwhile (splitSentences.length < 6) splitSentences.push(\"...\");\nsplitSentences = splitSentences.slice(0, 6);\n\nconst sentences = {};\nsplitSentences.forEach((s, i) => sentences[`sentence_${i}`] = s);\nreturn [{ json: { sentences, row_number: rowNumber } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        -1300
+      ],
+      "id": "prep_sentences",
+      "name": "Prepare Sentences"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "sentences",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        -1300
+      ],
+      "id": "split_sentences",
+      "name": "Split Sentences"
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "seconds"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -420,
+        -1300
+      ],
+      "id": "wait_throttle_1",
+      "name": "Wait 3s"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# INPUT  \n\"sentence\":{{ $json.value }}\n\n위 데이터를 바탕으로, **System Prompt**의 규칙대로 `image_prompt`를 생성하세요.\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# System Prompt: 뉴스정보를 몰입감 넘치는 이미지로 재구성 하기\n\n## Overview 당신은 30초 유투브 쇼츠 제작을 위한 컨텐츠 생성에 특화된 멀티모달 크리에이티브 AI입니다. 사용자가 제공하는 ‘sentence’를 바탕으로 팩트 기반의 몰입감 있는 이미지로 만들어냅니다. \n\n'sentence'가 한줄 주어집니다.  당신의 임무는 다음을 출력하는 것입니다. \n\n## Rules \n-'sentence'를 시각적으로 잘 전달하기 위한 장면을 연출하고 설명하세요. (300자)\n- 이 프롬프트는 시청자가 'sentence' 내용에 빠져들도록 만들어야 합니다.\n- 'sentence'에 등장한 구체적인 배경, 사물, 상황 등을 키워드 중심으로 묘사하세요. \n- 'sentence'에 등장하는 회사나 브랜드의 로고, 심볼, 상징적인 제품 등을 과장해 표현합니다.\n- 'sentence'에 등장하는 인물이나 사람들의 행동이나 감정 등이 극적으로 드러날 수 있어야 합니다. \n- 생성된 프롬프트는 예술적 감수성, 풍부한 상상력, 깊은 만족감을 제공해야 합니다. \n- 스타일 키워드는 다음과 같습니다.: realistic, neon HUD, Hyper-realistic, Glowing, Translucent, Crystalline, electromagnetic, radiant glints\n \n\n## 출력형식\n각 'scentence'에 대해 아래와 같이 응답하세요.\n- Image Prompt:\n\n## 출력예시\n- Image Prompt: In a cyber‑punk lab lit by neon indigo‑violet haze, a translucent “LightShed” logo hologram hovers over server towers. A hooded hacker taps artist‑shield panels that fracture to pixel dust; before/after screens blink “PROTECTION BYPASSED”. Warm artwork orbs drift amid cold chrome while electric data streams whip through exposed fibers, scattering sparks across misty steel floors."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -240,
+        -1300
+      ],
+      "id": "agent_img_prompt",
+      "name": "Generate Image Prompt"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "GPT-5-MINI",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "options": {
+          "temperature": 0.7,
+          "maxTokens": 1000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -1140
+      ],
+      "id": "model_img_prompt",
+      "name": "GPT-5.1 Model (Image)",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://queue.fal.run/fal-ai/nano-banana/edit",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Key YOUR_FAL_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "jsonBody": "={\n  \"prompt\": \"{{ $json.output.image_prompt }}\",\n  \"image_size\": \"1080x1920\",\n  \"num_inference_steps\": 30\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        60,
+        -1300
+      ],
+      "id": "gen_image_nano",
+      "name": "NanoBanana Image Gen"
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/videos",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_OPENAI_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "jsonBody": "={\n  \"model\": \"sora-2\",\n  \"prompt\": \"{{ $json.output.image_prompt }}\",\n  \"image_url\": \"{{ $json.images[0].url }}\",\n  \"size\": \"1080x1920\",\n  \"quality\": \"hd\",\n  \"duration\": \"5\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        360,
+        -1300
+      ],
+      "id": "gen_video_sora",
+      "name": "Sora-2 (OpenAI)"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "input": "={{ $('Prepare Sentences').item.json.sentences.sentence_0 }} {{ $('Prepare Sentences').item.json.sentences.sentence_1 }} {{ $('Prepare Sentences').item.json.sentences.sentence_2 }} {{ $('Prepare Sentences').item.json.sentences.sentence_3 }} {{ $('Prepare Sentences').item.json.sentences.sentence_4 }} {{ $('Prepare Sentences').item.json.sentences.sentence_5 }}",
+        "voice": "alloy",
+        "options": {
+          "response_format": "mp3",
+          "speed": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -420,
+        -1000
+      ],
+      "id": "gen_audio_tts",
+      "name": "OpenAI TTS",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/audio/transcriptions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "model",
+              "value": "whisper-1"
+            },
+            {
+              "name": "response_format",
+              "value": "verbose_json"
+            },
+            {
+              "name": "timestamp_granularities[]",
+              "value": "word"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        -1000
+      ],
+      "id": "gen_subtitles_whisper",
+      "name": "Whisper (Word-Level)",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// === 완전한 Whisper 데이터 처리 노드 (약어 처리 개선) ===\n// 문장 단위 연속 세그먼트 생성 + Word Subtitle + ASS Animation 통합\n\nconsole.log('🎬 완전한 Whisper 데이터 처리 시작');\n\nconst inputData = $input.first().json;\nlet whisperData;\n\n// === 1단계: Whisper 데이터 추출 ===\ntry {\n  if (inputData.data && typeof inputData.data === 'string') {\n    whisperData = JSON.parse(inputData.data);\n  } else if (inputData.data) {\n    whisperData = inputData.data;\n  } else {\n    whisperData = inputData;\n  }\n  \n  console.log('📊 Whisper 데이터 확인:', {\n    hasSegments: !!whisperData.segments,\n    segmentCount: whisperData.segments?.length,\n    hasWords: !!whisperData.words,\n    wordCount: whisperData.words?.length,\n    duration: whisperData.duration\n  });\n  \n} catch (error) {\n  console.log('❌ Whisper 데이터 파싱 실패:', error.message);\n  return [{ json: { error: 'Whisper data parsing failed', inputData } }];\n}\n\n// === 2단계: 전체 텍스트 결합 및 개선된 문장 분리 ===\nconsole.log('📝 개선된 문장 단위 분리 시작...');\n\nconst { segments, words } = whisperData;\n\n// 모든 세그먼트의 텍스트를 하나로 결합\nconst fullText = segments.map(seg => seg.text.trim()).join(' ');\nconsole.log('🔤 전체 텍스트:', fullText);\n\n// 개선된 문장 분리 함수\nfunction smartSentenceSplit(text) {\n  console.log('🔍 스마트 문장 분리 시작...');\n  console.log('🔤 원본 텍스트:', text);\n  \n  // 1단계: 기본 문장 분리 (마침표, 물음표, 느낌표)\n  const basicSentences = [];\n  let currentSentence = '';\n  \n  for (let i = 0; i < text.length; i++) {\n    const char = text[i];\n    const nextChar = text[i + 1];\n    const prevChar = text[i - 1];\n    \n    currentSentence += char;\n    \n    // 문장 종료 후보 발견\n    if (char === '.' || char === '!' || char === '?') {\n      \n      // 약어/이니셜 패턴 체크 (더 엄격하게)\n      const isAbbreviation = checkIfAbbreviation(text, i, prevChar, nextChar);\n      \n      if (!isAbbreviation) {\n        // 진짜 문장 끝으로 판단\n        basicSentences.push(currentSentence.trim());\n        currentSentence = '';\n        console.log('✂️ 문장 분리:', basicSentences[basicSentences.length - 1]);\n      } else {\n        console.log('🔤 약어 감지, 분리하지 않음:', `\"${prevChar}${char}\"`);\n      }\n    }\n  }\n  \n  // 마지막 문장 추가\n  if (currentSentence.trim()) {\n    basicSentences.push(currentSentence.trim());\n    console.log('📝 마지막 문장 추가:', currentSentence.trim());\n  }\n  \n  console.log(`📊 총 ${basicSentences.length}개 문장 분리 완료`);\n  return basicSentences.filter(s => s.length > 0);\n}\n\n// 약어/이니셜 판단 함수 (더 엄격하게 수정)\nfunction checkIfAbbreviation(text, dotIndex, prevChar, nextChar) {\n  // 1. 단일 대문자 + 마침표 패턴만 약어로 인정 (예: \"L.\")\n  if (prevChar && prevChar.match(/[A-Z]/) && nextChar === ' ') {\n    const wordBefore = getWordBefore(text, dotIndex - 1);\n    const nextWord = getNextWord(text, dotIndex + 1);\n    \n    // 단일 문자이고, 다음 단어가 소문자나 한글로 시작하면 약어\n    if (wordBefore.length === 1 && nextWord && \n        (nextWord[0].match(/[a-z가-힣]/) || nextWord[0] === nextWord[0].toLowerCase())) {\n      console.log('🔤 단일 대문자 약어 감지:', `\"${wordBefore}.\" → \"${nextWord}\"`);\n      return true;\n    }\n  }\n  \n  // 2. 숫자 + % + 나 패턴 (예: \"16%나\")은 약어가 아님\n  if (prevChar && prevChar.match(/[%나다습니]/)) {\n    return false;\n  }\n  \n  // 3. 일반적인 한국어 어미는 약어가 아님\n  const wordBefore = getWordBefore(text, dotIndex - 1);\n  if (wordBefore.match(/습니다|됩니다|입니다$/)) {\n    return false;\n  }\n  \n  return false;\n}\n\n// 이전 단어 추출\nfunction getWordBefore(text, index) {\n  let word = '';\n  for (let i = index; i >= 0; i--) {\n    const char = text[i];\n    if (char === ' ') break;\n    word = char + word;\n  }\n  return word;\n}\n\n// 다음 단어 추출\nfunction getNextWord(text, startIndex) {\n  let word = '';\n  let foundStart = false;\n  \n  for (let i = startIndex; i < text.length; i++) {\n    const char = text[i];\n    \n    if (!foundStart && char === ' ') continue;\n    if (!foundStart && char !== ' ') foundStart = true;\n    \n    if (foundStart) {\n      if (char === ' ') break;\n      word += char;\n    }\n  }\n  \n  return word;\n}\n\n// 개선된 문장 분리 실행\nconst sentences = smartSentenceSplit(fullText);\nconsole.log('📋 분리된 문장들:');\nsentences.forEach((sentence, i) => {\n  console.log(`  ${i + 1}: \"${sentence}\"`);\n});\n\n// === 3단계: 각 문장에 해당하는 단어들 찾기 및 타이밍 계산 ===\nconsole.log('⏱️ 문장별 타이밍 계산...');\n\nfunction findWordsForSentence(sentence, allWords, startIndex = 0) {\n  const sentenceWords = sentence.split(/\\s+/).filter(w => w.length > 0);\n  const matchedWords = [];\n  let wordIndex = startIndex;\n  let sentenceWordIndex = 0;\n  \n  console.log(`🔍 문장 처리: \"${sentence}\"`);\n  console.log(`   찾을 단어들: [${sentenceWords.join(', ')}]`);\n  \n  // 각 문장의 첫 번째 단어부터 마지막 단어까지 순차적으로 찾기\n  while (wordIndex < allWords.length && sentenceWordIndex < sentenceWords.length) {\n    const currentWord = allWords[wordIndex].word.trim();\n    const targetWord = sentenceWords[sentenceWordIndex];\n    \n    // 단어가 매칭되는지 확인 (부분 매칭 허용)\n    if (currentWord.includes(targetWord) || targetWord.includes(currentWord) || \n        currentWord.replace(/[.,!?]/g, '') === targetWord.replace(/[.,!?]/g, '')) {\n      matchedWords.push(allWords[wordIndex]);\n      console.log(`   ✅ 매칭: \"${targetWord}\" = \"${currentWord}\" (${allWords[wordIndex].start.toFixed(2)}s)`);\n      sentenceWordIndex++;\n    } else {\n      console.log(`   ⏭️ 스킵: \"${currentWord}\" (${allWords[wordIndex].start.toFixed(2)}s)`);\n    }\n    wordIndex++;\n  }\n  \n  console.log(`   결과: ${matchedWords.length}/${sentenceWords.length} 단어 매칭`);\n  \n  return { matchedWords, nextStartIndex: wordIndex };\n}\n\n// 문장별 세그먼트 생성\nconst sentenceSegments = [];\nlet currentWordIndex = 0;\n\nsentences.forEach((sentence, index) => {\n  console.log(`🔍 문장 ${index + 1} 처리 중: \"${sentence}\"`);\n  \n  // 이 문장에 해당하는 단어들 찾기\n  const result = findWordsForSentence(sentence, words, currentWordIndex);\n  const sentenceWords = result.matchedWords;\n  currentWordIndex = result.nextStartIndex;\n  \n  if (sentenceWords.length > 0) {\n    const startTime = sentenceWords[0].start;\n    const endTime = sentenceWords[sentenceWords.length - 1].end;\n    \n    sentenceSegments.push({\n      segmentId: index,\n      startTime: startTime,\n      endTime: endTime,\n      duration: endTime - startTime,\n      text: sentence,\n      words: sentenceWords.map(word => ({\n        word: word.word.trim(),\n        start: word.start,\n        end: word.end,\n        duration: word.end - word.start,\n        confidence: 0.8,\n        segmentId: index\n      })),\n      wordCount: sentenceWords.length\n    });\n    \n    console.log(`✅ 문장 ${index + 1}: ${startTime.toFixed(2)}s ~ ${endTime.toFixed(2)}s (${sentenceWords.length}개 단어)`);\n  } else {\n    console.log(`⚠️ 문장 ${index + 1}: 매칭되는 단어를 찾을 수 없음`);\n  }\n});\n\n// === 4단계: 6개 문장으로 제한 및 연속 타이밍 조정 ===\nconst tempSegments = sentenceSegments.slice(0, 6);\n\n// 세그먼트를 연속적으로 연결\nconst finalSegments = [];\n\nfor (let index = 0; index < tempSegments.length; index++) {\n  const segment = tempSegments[index];\n  let startTime, endTime;\n  \n  if (index === 0) {\n    // 첫 번째 세그먼트: 0초부터 시작\n    startTime = 0;\n  } else {\n    // 이후 세그먼트들: 이전 세그먼트 끝시간부터 시작\n    startTime = finalSegments[index - 1].endTime;\n  }\n  \n  if (index === tempSegments.length - 1) {\n    // 마지막 세그먼트: 원래 끝시간 유지\n    endTime = segment.endTime;\n  } else {\n    // 이후 세그먼트들: 다음 문장의 시작시간까지\n    endTime = tempSegments[index + 1].startTime;\n  }\n  \n  finalSegments.push({\n    segmentId: index,\n    startTime: startTime,\n    endTime: endTime,\n    duration: endTime - startTime,\n    text: segment.text,\n    originalId: index\n  });\n}\n\nconsole.log(`📊 최종 세그먼트: ${finalSegments.length}개`);\nfinalSegments.forEach((seg, i) => {\n  console.log(`  세그먼트 ${i}: \"${seg.text}\" (${seg.startTime.toFixed(2)}s ~ ${seg.endTime.toFixed(2)}s)`);\n});\n\n// === 5단계: 세그먼트별 단어 그룹핑 (연속 타이밍 적용) ===\nconsole.log('🔤 세그먼트별 단어 그룹핑 (연속 타이밍)...');\n\nconst wordsGroupedBySegment = finalSegments.map((segment, index) => {\n  // 원본 문장에서 해당하는 단어들 가져오기\n  const originalSegment = tempSegments[index];\n  \n  return {\n    segmentId: index,\n    segmentText: segment.text,\n    startTime: segment.startTime,\n    endTime: segment.endTime,\n    words: originalSegment ? originalSegment.words : [],\n    totalWords: originalSegment ? originalSegment.wordCount : 0\n  };\n});\n\n// === 6단계: 전체 단어 리스트 생성 (애니메이션용) ===\nconsole.log('🎭 애니메이션용 단어 리스트 생성...');\n\nconst allWordsForAnimation = [];\nwordsGroupedBySegment.forEach(segment => {\n  segment.words.forEach(word => {\n    allWordsForAnimation.push(word);\n  });\n});\n\n// 첫 번째 루프만 필터링\nconst firstLoopEndTime = finalSegments[finalSegments.length - 1]?.endTime || 40;\nconst filteredWords = allWordsForAnimation.filter(word => word.start <= firstLoopEndTime);\n\nconsole.log(`📊 단어 필터링: ${allWordsForAnimation.length} → ${filteredWords.length} 단어`);\n\n// === 7단계: ASS 애니메이션 자막 생성 ===\nconsole.log('⚡ ASS 애니메이션 자막 생성...');\n\nfunction generateEnhancedASS(words) {\n  const assHeader = `[Script Info]\nTitle: Netflix AI News - Enhanced Electric Blue\nScriptType: v4.00+\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: ElectricGlow,Montserrat,22,&Hffffff,&Hffffff,&H00FF8000,&H80000000,1,0,0,0,100,100,0,0,1,4,6,5,50,50,960,1\nStyle: PunchEffect,Montserrat,22,&Hffffff,&Hffffff,&H00FF8000,&H80000000,1,0,0,0,100,100,0,0,1,4,6,5,50,50,960,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n`;\n\n  let assEvents = '';\n  \n  words.forEach((word, index) => {\n    const startTime = formatTimeForASS(word.start * 1000);\n    const endTime = formatTimeForASS(word.end * 1000);\n    \n    // 교대로 다른 애니메이션 적용\n    const useGlowEffect = index % 2 === 0;\n    \n    if (useGlowEffect) {\n      const animation = `{\\\\fad(300,200)\\\\t(0,300,\\\\fscx110\\\\fscy110\\\\3c&H00FF8000&\\\\bord5)\\\\t(300,600,\\\\fscx100\\\\fscy100\\\\3c&H00CC6000&\\\\bord4)\\\\t(600,900,\\\\3c&H00FF8000&\\\\bord5)}`;\n      assEvents += `Dialogue: 0,${startTime},${endTime},ElectricGlow,,0,0,0,,${animation}${word.word}\\n`;\n    } else {\n      const animation = `{\\\\fad(200,200)\\\\t(0,200,\\\\fscx120\\\\fscy120\\\\frz3\\\\3c&H00FF8000&\\\\bord6)\\\\t(200,400,\\\\fscx100\\\\fscy100\\\\frz0\\\\3c&H00CC6000&\\\\bord4)\\\\t(400,600,\\\\3c&H00FF8000&\\\\bord5)}`;\n      assEvents += `Dialogue: 0,${startTime},${endTime},PunchEffect,,0,0,0,,${animation}${word.word}\\n`;\n    }\n  });\n  \n  return assHeader + assEvents;\n}\n\n// ASS 시간 형식 변환\nfunction formatTimeForASS(ms) {\n  const hours = Math.floor(ms / 3600000);\n  const minutes = Math.floor((ms % 3600000) / 60000);\n  const seconds = Math.floor((ms % 60000) / 1000);\n  const centiseconds = Math.floor((ms % 1000) / 10);\n  \n  return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;\n}\n\n// SRT 형식 생성\nfunction generateSRT(words) {\n  let srtContent = '';\n  \n  words.forEach((word, index) => {\n    const startTime = formatSecondsToSRT(word.start);\n    const endTime = formatSecondsToSRT(word.end);\n    \n    srtContent += `${index + 1}\\n`;\n    srtContent += `${startTime} --> ${endTime}\\n`;\n    srtContent += `${word.word}\\n\\n`;\n  });\n  \n  return srtContent.trim();\n}\n\n// SRT 시간 형식 변환\nfunction formatSecondsToSRT(seconds) {\n  const hours = Math.floor(seconds / 3600);\n  const minutes = Math.floor((seconds % 3600) / 60);\n  const secs = Math.floor(seconds % 60);\n  const ms = Math.floor((seconds % 1) * 1000);\n  \n  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${ms.toString().padStart(3, '0')}`;\n}\n\n// WebVTT 형식 생성\nfunction generateWebVTT(words) {\n  let webVttContent = 'WEBVTT\\n\\n';\n  \n  words.forEach((word, index) => {\n    const startTime = formatSecondsToWebVTT(word.start);\n    const endTime = formatSecondsToWebVTT(word.end);\n    \n    webVttContent += `${index + 1}\\n`;\n    webVttContent += `${startTime} --> ${endTime}\\n`;\n    webVttContent += `${word.word}\\n\\n`;\n  });\n  \n  return webVttContent.trim();\n}\n\n// WebVTT 시간 형식 변환\nfunction formatSecondsToWebVTT(seconds) {\n  const hours = Math.floor(seconds / 3600);\n  const minutes = Math.floor((seconds % 3600) / 60);\n  const secs = seconds % 60;\n  \n  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toFixed(3).padStart(6, '0')}`;\n}\n\n// === 8단계: 자막 파일 생성 ===\nconst assContent = generateEnhancedASS(filteredWords);\nconst srtContent = generateSRT(filteredWords);\nconst webVttContent = generateWebVTT(filteredWords);\n\n// === 9단계: 통계 생성 ===\nconst statistics = {\n  totalWords: filteredWords.length,\n  totalDuration: firstLoopEndTime,\n  averageWordDuration: filteredWords.length > 0 ? filteredWords.reduce((sum, w) => sum + w.duration, 0) / filteredWords.length : 0,\n  wordsPerSegment: wordsGroupedBySegment.map(s => s.totalWords),\n  segmentCount: finalSegments.length,\n  sentencesProcessed: sentences.length,\n  method: \"sentence_based_continuous_segmentation_with_abbreviation_handling\"\n};\n\nconsole.log('📊 최종 통계:', statistics);\n\n// === 최종 출력 데이터 ===\nconst outputData = {\n  // 6sentences 호환 데이터 (문장 단위 연속)\n  totalSegments: finalSegments.length,\n  totalDuration: firstLoopEndTime,\n  segmentTimings: finalSegments,\n  \n  // Word Subtitle 데이터\n  wordSubtitles: wordsGroupedBySegment,\n  allWords: filteredWords,\n  \n  // 자막 파일들\n  subtitleFiles: {\n    ass: {\n      content: assContent,\n      filename: \"ASS_subtitle.ass\"\n    },\n    srt: {\n      content: srtContent,\n      filename: \"word_subtitles.srt\"\n    },\n    webvtt: {\n      content: webVttContent,\n      filename: \"word_subtitles.vtt\"\n    }\n  },\n  \n  // 통계 및 메타데이터\n  statistics: statistics,\n  processingInfo: {\n    processedAt: new Date().toISOString(),\n    method: \"sentence_based_continuous_whisper_processor_v4_with_abbreviation_fix\",\n    whisperFormat: \"segments_and_words\",\n    segmentationMethod: \"sentence_based_continuous_smart_split\",\n    animationStyle: \"electric_blue_enhanced\",\n    ready: true\n  }\n};\n\nconsole.log('✅ 완전한 문장 기반 Whisper 처리 완료! (약어 처리 개선)');\nconsole.log(`📝 ${statistics.segmentCount}개 연속 문장 세그먼트, ${statistics.totalWords}개 단어`);\nconsole.log(`⚡ ASS 애니메이션 자막 생성 완료`);\nconsole.log(`🔧 약어/이니셜 처리 기능 추가됨`);\n\nreturn [{ json: outputData }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        180,
+        -1000
+      ],
+      "id": "gen_ass_subtitles",
+      "name": "Generate ASS Subtitles"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === 수정된 Data Aggregator - 연속 타이밍 적용 (로고 파일 처리 수정) ===\n\nconsole.log('📊 Data Aggregator 시작 (연속 타이밍 수정 버전)');\n\nconst inputItems = $input.all();\nconsole.log(`📥 입력 데이터: ${inputItems.length}개`);\n\n// === 데이터 분류 및 수집 ===\nlet videoFiles = [];\nlet imageFiles = [];\nlet narrationAudio = null;\nlet wordSubtitleData = null;\nlet backgroundMusic = null;\nlet logoData = null;\n\n// 각 입력 데이터 처리\ninputItems.forEach((item, index) => {\n  const data = item.json;\n  \n  console.log(`📋 입력 ${index}: ${data.name || 'unnamed'} (${data.mimeType || data.kind || 'unknown'})`);\n  \n  // 비디오 파일 (로고가 아닌 경우)\n  if (data.mimeType === 'video/mp4' && !data.webViewLink && !data.name.toLowerCase().includes('logo')) {\n    videoFiles.push({\n      kind: \"drive#file\",\n      id: data.id,\n      name: data.name,\n      mimeType: data.mimeType,\n      source: `input[${index}]`\n    });\n    console.log(`  ✅ 비디오 파일 추가: ${data.name}`);\n  }\n  \n // 이미지 파일 (JPEG와 PNG 모두 처리)\nelse if (data.mimeType === 'image/jpeg' || data.mimeType === 'image/png') {\n  imageFiles.push({\n    kind: \"drive#file\",\n    id: data.id,\n    name: data.name,\n    mimeType: data.mimeType,\n    source: `input[${index}]`\n  });\n  console.log(`  ✅ 이미지 파일 추가: ${data.name} (${data.mimeType})`);\n}\n  \n  // 나레이션 오디오 (webViewLink 또는 webContentLink 있는 오디오)\n  else if ((data.mimeType === 'audio/mpeg' || data.mimeType === 'audio/mp3') && \n           (data.webViewLink || data.webContentLink)) {\n    \n    let audioUrl = data.webContentLink || \n                   data.webViewLink.replace('/view?usp=drivesdk', '/export=download');\n    \n    narrationAudio = {\n      kind: \"drive#file\",\n      id: data.id,\n      name: data.name,\n      mimeType: data.mimeType,\n      url: audioUrl,\n      originalName: data.name,\n      processingInfo: {\n        source: \"audio_download_node\",\n        dynamicName: \"static\",\n        ready: true\n      }\n    };\n    console.log(`  ✅ 나레이션 오디오: ${data.name} (MIME: ${data.mimeType})`);\n  }\n  \n  // 자막 데이터 (segmentTimings 있는 객체)\n  else if (data.segmentTimings && data.wordSubtitles && data.subtitleFiles) {\n    wordSubtitleData = data;\n    console.log(`  ✅ 자막 데이터: ${data.totalSegments}개 세그먼트, ASS 포함`);\n  }\n  \n  // BGM 데이터 (kind === 'bgm')\n  else if (data.kind === 'bgm') {\n    backgroundMusic = {\n      kind: data.kind,\n      id: data.id,\n      name: data.name,\n      mimeType: data.mimeType,\n      style: data.style,\n      energy: data.energy,\n      volume: 0.15, // 고정 15%\n      url: `https://drive.google.com/uc?id=${data.id}&export=download`\n    };\n    console.log(`  ✅ BGM: ${data.name} (15%)`);\n  }\n  \n  // 로고 데이터 (webViewLink 있는 비디오 또는 이름에 logo가 포함된 비디오)\n  else if (data.mimeType === 'video/mp4' && (data.webViewLink || data.name.toLowerCase().includes('logo'))) {\n    logoData = {\n      kind: \"drive#file\",\n      id: data.id,\n      name: data.name,\n      mimeType: data.mimeType,\n      url: data.webViewLink ? data.webViewLink.replace('/view?usp=drivesdk', '/export=download') : \n            `https://drive.google.com/file/d/${data.id}/export=download`\n    };\n    console.log(`  ✅ 로고: ${data.name}`);\n  }\n  \n  else {\n    console.log(`  ⚠️ 미분류 데이터: ${data.name || 'unnamed'}`);\n  }\n});\n\n// === 🔧 수정된 matchedSegments 생성 ===\nfunction createMatchedSegments() {\n  if (!wordSubtitleData || !wordSubtitleData.segmentTimings) {\n    console.log('❌ 자막 데이터 없음 - matchedSegments 생성 불가');\n    return [];\n  }\n  \n  const segments = [];\n  const originalTimings = wordSubtitleData.segmentTimings;\n  \n  console.log('🔧 matchedSegments 생성 중...');\n  console.log('📝 원본 자막 타이밍:');\n  originalTimings.forEach((timing, i) => {\n    console.log(`  세그먼트 ${i}: ${timing.startTime.toFixed(2)}~${timing.endTime.toFixed(2)}초 (${timing.duration.toFixed(2)}초)`);\n  });\n  \n  // 🆕 파일명에서 숫자 추출하는 함수 (수정됨)\n  function extractNumber(filename) {\n    // 파일명에서 _XX_ 패턴의 숫자 추출 (예: \"YYYY08Aug 5, 2025_01_video1.mp4\" → 1)\n    const match = filename.match(/_(\\d+)_/);\n    if (match) {\n      return parseInt(match[1], 10);\n    }\n    // 숫자가 없으면 100 반환 (999는 너무 큰 값이라 문제 발생)\n    return 100;\n  }\n  \n  // 🎯 비디오와 이미지 파일 정렬\n  const sortedVideoFiles = videoFiles.sort((a, b) => {\n    const numA = extractNumber(a.name);\n    const numB = extractNumber(b.name);\n    console.log(`  비교: ${a.name}(${numA}) vs ${b.name}(${numB})`);\n    return numA - numB;\n  });\n\n  const sortedImageFiles = imageFiles.sort((a, b) => {\n    const numA = extractNumber(a.name);\n    const numB = extractNumber(b.name);\n    console.log(`  비교: ${a.name}(${numA}) vs ${b.name}(${numB})`);\n    return numA - numB;\n  });\n\n  // 비디오를 먼저 배치하고, 그 다음에 이미지 배치\n  const allMediaFiles = [...sortedVideoFiles, ...sortedImageFiles];\n  \n  console.log('📁 넘버링 + 비디오 우선순위로 정렬된 미디어 파일:');\n  allMediaFiles.forEach((file, i) => {\n    const num = extractNumber(file.name);\n    const type = file.mimeType === 'video/mp4' ? 'VIDEO' : 'IMAGE';\n    console.log(`  세그먼트 ${i}: ${file.name} (번호: ${num}, 타입: ${type})`);\n  });\n  \n  // 세그먼트 0~5: 정렬된 비디오와 이미지를 순서대로 배치\n  originalTimings.forEach((originalTiming, i) => {\n    if (i < allMediaFiles.length) {\n      const mediaFile = allMediaFiles[i];\n      const isVideo = mediaFile.mimeType === 'video/mp4';\n      \n      const segment = {\n        segmentId: i,\n        type: isVideo ? \"generated_video\" : \"generated_image\",\n        id: mediaFile.id,\n        name: mediaFile.name,\n        mimeType: mediaFile.mimeType,\n        url: `https://drive.google.com/uc?id=${mediaFile.id}&export=download`,\n        source: mediaFile.source,\n        timing: {\n          startTime: originalTiming.startTime,\n          endTime: originalTiming.endTime,\n          duration: originalTiming.duration\n        },\n        text: originalTiming.text\n      };\n      \n      segments.push(segment);\n      console.log(`  ✅ 세그먼트 ${i} 생성: ${mediaFile.name}`);\n    }\n  });\n  \n  // 자막 기준 총 시간 (원본 자막의 마지막 세그먼트 끝 시간)\n  const lastSegmentEndTime = Math.max(...originalTimings.map(t => t.endTime));\n  const subtitleTotalDuration = lastSegmentEndTime;\n  \n  // 🎯 세그먼트 6: 로고 (D+1초~D+2초)\n  if (logoData) {\n    const logoStartTime = subtitleTotalDuration + 1;  // D+1초\n    const logoEndTime = logoStartTime + 1.0;          // D+2초 (1초 길이)\n    \n    const logoSegment = {\n      segmentId: 6,\n      type: \"animated_logo\",\n      id: logoData.id,\n      name: logoData.name,\n      mimeType: logoData.mimeType,\n      url: logoData.url,\n      source: \"logo\",\n      timing: {\n        startTime: logoStartTime,\n        endTime: logoEndTime,\n        duration: 1.0\n      },\n      text: \"로고 애니메이션 (재생 후 정지)\"\n    };\n    \n    segments.push(logoSegment);\n    console.log(`  ✅ 로고 세그먼트 6 생성: ${logoData.name}`);\n  }\n  \n  // === 🎯 타이밍 조정 로직 (가이드 적용) ===\n  const adjustedMatchedSegments = segments.map((seg) => ({ ...seg }));\n  \n  // 1. 세그먼트 0의 시작 시간은 항상 0으로 고정\n  if (adjustedMatchedSegments.length > 0) {\n    adjustedMatchedSegments[0].timing.startTime = 0;\n  }\n  \n  // 2. 이후 세그먼트들의 시작시간은 자막에서 받아온 값 사용\n  for (let i = 1; i < adjustedMatchedSegments.length; i++) {\n    if (adjustedMatchedSegments[i].segmentId < 6) {\n      // 세그먼트 1~5는 원본 자막 시간 유지\n      adjustedMatchedSegments[i].timing.startTime = segments[i].timing.startTime;\n    }\n    // 세그먼트 6 (로고)는 이미 올바른 시간으로 설정됨\n  }\n  \n  // 3. 모든 세그먼트의 endTime과 duration 계산 (다음 세그먼트의 startTime 기준)\n  for (let i = 0; i < adjustedMatchedSegments.length - 1; i++) {\n    const start = adjustedMatchedSegments[i].timing.startTime;\n    const nextStart = adjustedMatchedSegments[i + 1].timing.startTime;\n    adjustedMatchedSegments[i].timing.endTime = nextStart;\n    adjustedMatchedSegments[i].timing.duration = parseFloat((nextStart - start).toFixed(6));\n  }\n  \n  // 4. 마지막 세그먼트 (로고)의 duration은 1초 고정, endTime도 설정\n  if (adjustedMatchedSegments.length > 0) {\n    const last = adjustedMatchedSegments[adjustedMatchedSegments.length - 1];\n    last.timing.endTime = parseFloat((last.timing.startTime + 1.0).toFixed(6));\n    last.timing.duration = 1.0;\n  }\n  \n  console.log('\\n🔧 타이밍 조정 완료:');\n  adjustedMatchedSegments.forEach((seg, i) => {\n    console.log(`  세그먼트 ${seg.segmentId}: ${seg.timing.startTime.toFixed(6)}~${seg.timing.endTime.toFixed(6)}초 (${seg.timing.duration.toFixed(6)}초) - ${seg.name}`);\n  });\n  \n  console.log(`\\n✅ matchedSegments 생성 완료: ${adjustedMatchedSegments.length}개`);\n  return adjustedMatchedSegments;\n}\n\nconst matchedSegments = createMatchedSegments();\n\n// === 최종 결과 생성 ===\nconst result = {\n  // 미디어 파일들\n  videoSegments: videoFiles,\n  imageSegments: imageFiles,\n  allSegments: [...videoFiles, ...imageFiles],\n  \n  // 🔗 핵심: 조정된 타이밍이 적용된 matchedSegments\n  matchedSegments: matchedSegments,\n  \n  // 🎧 나레이션 오디오\n  narrationAudio: narrationAudio,\n  \n  // 🎭 자막 데이터 (원본 유지)\n  wordSubtitleData: wordSubtitleData,\n  \n  // 🎵 BGM 데이터\n  backgroundMusic: backgroundMusic,\n  availableMusic: backgroundMusic ? [backgroundMusic] : [],\n  \n  // 🎯 로고 데이터\n  animatedLogo: logoData,\n  \n  // 기타 정보\n  videoContent: {},\n  segmentMap: [],\n  totalSegments: videoFiles.length + imageFiles.length + (logoData ? 1 : 0),\n  \n  // 구성 정보\n  composition: {\n    videos: videoFiles.length,\n    images: imageFiles.length,\n    logo: logoData ? 1 : 0,\n    pattern: `V${videoFiles.length}I${imageFiles.length}${logoData ? 'L1' : ''}`,\n    hasNarration: !!narrationAudio,\n    hasBGM: !!backgroundMusic,\n    hasLogo: !!logoData,\n    hasSubtitles: !!wordSubtitleData\n  },\n  \n  // 자막 정보\n  subtitleInfo: {\n    hasBasicSubtitle: false,\n    hasWordSubtitle: !!wordSubtitleData,\n    preferredSubtitle: \"word\",\n    subtitleType: wordSubtitleData ? \"단어별 자막\" : \"자막 없음\",\n    wordCount: wordSubtitleData?.statistics?.totalWords || 0\n  },\n  \n  // 로고 정보\n  logoInfo: {\n    hasAnimatedLogo: !!logoData,\n    logoType: logoData ? \"애니메이션 로고 (세그먼트 6)\" : \"로고 없음\",\n    logoDuration: logoData ? 1 : 0,\n    logoPosition: logoData ? \"D+1초~D+2초 (재생 후 정지)\" : \"없음\"\n  },\n  \n  // 음악 정보\n  musicInfo: {\n    hasBGM: !!backgroundMusic,\n    musicStyle: backgroundMusic?.style || \"없음\",\n    musicEnergy: backgroundMusic?.energy || \"없음\",\n    volume: backgroundMusic?.volume || 0,\n    availableOptions: backgroundMusic ? 1 : 0\n  },\n  \n  // 검증 정보\n  validation: {\n    hasNarration: !!narrationAudio,\n    hasSubtitle: false,\n    hasWordSubtitle: !!wordSubtitleData,\n    hasAnimatedLogo: !!logoData,\n    hasBGM: !!backgroundMusic,\n    hasVideoSegments: videoFiles.length > 0,\n    hasImageSegments: imageFiles.length > 0,\n    totalSegments: videoFiles.length + imageFiles.length + (logoData ? 1 : 0),\n    segmentIdsContinuous: true,\n    hasSixSentencesData: false,\n    hasFullVideoText: false,\n    hasMatchedSegments: matchedSegments.length > 0\n  },\n  \n  // 처리 준비 상태\n  readyForTimingParsing: !!wordSubtitleData && (videoFiles.length > 0 || imageFiles.length > 0),\n  dataComplete: !!wordSubtitleData && !!narrationAudio && !!backgroundMusic && matchedSegments.length > 0,\n  readyForAnimatedProcessing: !!wordSubtitleData,\n  readyForLogoProcessing: !!logoData,\n  readyForVideoComposition: matchedSegments.length > 0 && !!narrationAudio && !!backgroundMusic,\n  \n  // 처리 정보\n  processingTimestamp: new Date().toISOString(),\n  processingInfo: {\n    method: \"adjusted_timing_aggregator_v1\",\n    totalInputsProcessed: inputItems.length,\n    dataSourcesFound: [\n      videoFiles.length > 0 ? \"video_files\" : null,\n      imageFiles.length > 0 ? \"image_files\" : null,\n      narrationAudio ? \"narration_audio\" : null,\n      wordSubtitleData ? \"word_subtitle_data\" : null,\n      backgroundMusic ? \"background_music\" : null,\n      logoData ? \"logo_data\" : null\n    ].filter(Boolean),\n    matchedSegmentsGenerated: matchedSegments.length > 0,\n    timingMethod: \"segment_0_zero_start_others_continuous\",\n    ready: true\n  }\n};\n\n// 최종 로그\nconsole.log('\\n✅ 조정된 타이밍 Data Aggregator 완료:');\nconsole.log(`  📹 비디오: ${videoFiles.length}개`);\nconsole.log(`  🖼️ 이미지: ${imageFiles.length}개`);\nconsole.log(`  🎧 나레이션: ${narrationAudio ? '있음' : '없음'}`);\nconsole.log(`  🎵 BGM: ${backgroundMusic ? '있음' : '없음'}`);\nconsole.log(`  🎯 로고: ${logoData ? '있음' : '없음'}`);\nconsole.log(`  🎭 자막: ${wordSubtitleData ? '있음 (원본 유지)' : '없음'}`);\nconsole.log(`  🔗 matchedSegments: ${matchedSegments.length}개`);\nif (matchedSegments.length > 0) {\n  console.log(`  ⏰ 세그먼트 0: ${matchedSegments[0].timing.startTime}~${matchedSegments[0].timing.endTime.toFixed(6)}초`);\n  if (matchedSegments.length > 1) {\n    console.log(`  ⏰ 세그먼트 1: ${matchedSegments[1].timing.startTime.toFixed(6)}~${matchedSegments[1].timing.endTime.toFixed(6)}초`);\n  }\n  if (logoData && matchedSegments.length > 6) {\n    console.log(`  ⏰ 세그먼트 6 (로고): ${matchedSegments[6].timing.startTime.toFixed(6)}~${matchedSegments[6].timing.endTime.toFixed(6)}초`);\n  }\n}\nconsole.log(`  ✅ 비디오 처리 준비: ${result.readyForVideoComposition ? '완료' : '미완료'}`);\n\nreturn [result];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        -1000
+      ],
+      "id": "d4b032ef-fe34-4846-9e75-59faa43ccd65",
+      "name": "Data Aggregator",
+      "executeOnce": true,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Simple Video Processor 수정 - 타이밍 문제 해결 ===\n\nconsole.log('🎬 Simple Video Processor 시작 (타이밍 문제 해결 버전)');\n\n// Data Aggregator에서 받은 데이터\nconst aggregatedData = $input.first().json;\nconst matchedSegments = aggregatedData.matchedSegments;\nconst narrationAudio = aggregatedData.narrationAudio;\nconst backgroundMusic = aggregatedData.backgroundMusic;\nconst wordSubtitleData = aggregatedData.wordSubtitleData;\nconst animatedLogo = aggregatedData.animatedLogo;\n\nconsole.log(`📊 처리할 세그먼트: ${matchedSegments.length}개`);\n\n// 작업 디렉토리 생성\nconst timestamp = new Date().toISOString().replace(/[:.]/g, '').slice(0, 15);\nconst workDir = `/tmp/video_work/${timestamp}`;\n\nconsole.log(`📁 작업 디렉토리: ${workDir}`);\n\n// Google Drive URL 정규화 함수\nfunction normalizeGoogleDriveUrl(url) {\n  if (!url) return url;\n  \n  // /file/d/ 패턴을 /uc?id= 패턴으로 변환\n  if (url.includes('/file/d/')) {\n    const fileIdMatch = url.match(/\\/file\\/d\\/([a-zA-Z0-9_-]+)/);\n    if (fileIdMatch) {\n      const fileId = fileIdMatch[1];\n      return `https://drive.google.com/uc?id=${fileId}&export=download`;\n    }\n  }\n  \n  // 이미 /uc?id= 형식이면 그대로 반환\n  return url;\n}\n\n// FFmpeg 명령어 생성 함수\nfunction generateFFmpegCommand() {\n  console.log('🔧 FFmpeg 명령어 생성 중...');\n  \n  // 🎯 핵심 수정: 총 길이를 마지막 세그먼트의 endTime으로 계산\n  const totalDuration = matchedSegments[matchedSegments.length - 1].timing.endTime;\n  console.log(`📏 총 영상 길이: ${totalDuration}초 (마지막 세그먼트 endTime 기준)`);\n  \n  // 1. 입력 파일들\n  let inputs = [];\n  let inputIndex = 0;\n  \n  // 세그먼트별 입력 처리\n  matchedSegments.forEach((segment, i) => {\n    if (segment.type === 'generated_video') {\n      // 비디오: 이미 속도 조정된 파일 사용\n      inputs.push(`-i adjusted_segment_${i}.mp4`);\n      console.log(`  📹 입력[${inputIndex}]: adjusted_segment_${i}.mp4 (비디오)`);\n    } else if (segment.type === 'generated_image') {\n      // 이미지: PNG로 통일\n      inputs.push(`-i segment_${i}.png`);\n      console.log(`  🖼️  입력[${inputIndex}]: segment_${i}.png (이미지)`);\n    } else if (segment.type === 'animated_logo') {\n      // 🎯 수정: 로고는 1초로 제한하되 전체 타이밍에 포함\n      inputs.push(`-i segment_${i}.mp4`);\n      console.log(`  🎯 입력[${inputIndex}]: segment_${i}.mp4 (로고)`);\n    }\n    inputIndex++;\n  });\n  \n  // 🎯 수정: 오디오 파일들 - 원본 파일명 사용\n  const narrationFileName = narrationAudio ? narrationAudio.name : 'narration.mp3';\n  const bgmFileName = backgroundMusic ? backgroundMusic.name : 'bgm.mp3';\n  \n  inputs.push(`-i \"${narrationFileName}\"`);\n  inputs.push(`-i \"${bgmFileName}\"`);\n  console.log(`  🎧 입력[${inputIndex}]: ${narrationFileName} (나레이션)`);\n  console.log(`  🎵 입력[${inputIndex + 1}]: ${bgmFileName} (BGM)`);\n  \n  const narrationIndex = inputIndex;\n  const bgmIndex = inputIndex + 1;\n  \n  // 2. 필터 복합체 생성 (60fps 통일 적용)\n  let filterComplex = [];\n  let videoLabels = [];\n  \n  matchedSegments.forEach((segment, i) => {\n    const videoLabel = `v${i}`;\n    videoLabels.push(`[${videoLabel}]`);\n    \n    if (segment.type === 'generated_video') {\n      // 비디오: 세로 변환 + 60fps 설정\n      filterComplex.push(\n        `[${i}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,fps=60[${videoLabel}]`\n      );\n      console.log(`  🎬 세그먼트 ${i}: 비디오 처리 (60fps, ${segment.timing.duration}초)`);\n      \n    } else if (segment.type === 'generated_image') {\n      // 이미지: 켄번 효과 + 60fps 통일\n      const timing = segment.timing;\n      const frameCount = Math.round(timing.duration * 60); // 60fps 기준 프레임수\n      \n      // 켄번 효과별 설정\n      const kenBurnsEffects = [\n        { // 세그먼트 2: Safety Sweep L2R\n          filter: `zoompan=z='1.40-0.40*(on/${frameCount})':d=${frameCount}:x='(iw-iw/zoom)*(0.1+0.6*(on/${frameCount}))':y='(ih-ih/zoom)/2':s=1080x1920:fps=60`\n        },\n        { // 세그먼트 3: Diagonal Drift  \n          filter: `zoompan=z='1+0.45*(on/${frameCount})':d=${frameCount}:x='(iw-iw/zoom)*(0.10+0.60*(on/${frameCount}))':y='(ih-ih/zoom)*(0.10+0.60*(on/${frameCount}))+0.03*(ih-ih/zoom)*sin(PI*on/${frameCount})':s=1080x1920:fps=60`\n        },\n        { // 세그먼트 4: One-Bounce Tilt\n          filter: `zoompan=z='1+0.50*(on/${frameCount})':d=${frameCount}:x='(iw-iw/zoom)/2':y='(ih-ih/zoom)*(0.50-0.30*(on/${frameCount})+0.05*sin(PI*on/${frameCount}))':s=1080x1920:fps=60`\n        },\n        { // 세그먼트 5: Wide Sweep L2R\n          filter: `zoompan=z='1.3-0.2*(on/${frameCount})':d=${frameCount}:x='iw*0.05+iw*0.9*on/${frameCount}':y='ih/2-(ih*zoom)/2':s=1080x1920:fps=60`\n        }\n      ];\n      \n      // 이미지 세그먼트 인덱스 계산 (비디오 세그먼트 제외)\n      const imageSegmentIndex = matchedSegments.slice(0, i).filter(s => s.type === 'generated_image').length;\n      const kenBurnsEffect = kenBurnsEffects[imageSegmentIndex] || kenBurnsEffects[0];\n      \n      filterComplex.push(\n        `[${i}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,${kenBurnsEffect.filter}[${videoLabel}]`\n      );\n      console.log(`  🎨 세그먼트 ${i}: 켄번 효과 (${timing.duration}초, ${frameCount}프레임, 60fps)`);\n      \n    } else if (segment.type === 'animated_logo') {\n      // 🎯 수정: 로고 처리 - 1초 duration 적용하되 60fps로 처리\n      const logoDuration = segment.timing.duration; // 1초\n      const logoFrameCount = Math.round(logoDuration * 60);\n      \n      filterComplex.push(\n        `[${i}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,fps=60,trim=duration=${logoDuration}[${videoLabel}]`\n      );\n      console.log(`  🎯 세그먼트 ${i}: 로고 처리 (${logoDuration}초, ${logoFrameCount}프레임, 60fps)`);\n    }\n  });\n  \n  // 3. 비디오 타임라인 연결 - 🎯 수정: 모든 세그먼트 포함\n  filterComplex.push(`${videoLabels.join('')}concat=n=${matchedSegments.length}:v=1:a=0[video_timeline]`);\n  console.log(`  🔗 concat: ${matchedSegments.length}개 세그먼트 연결`);\n  \n  // 4. 자막 추가\n  filterComplex.push(`[video_timeline]ass=subtitle.ass[final_video]`);\n  \n  // 5. 오디오 처리 - 🎯 수정: 동적 총 길이 사용\n  const fadeOutTime = totalDuration - 1;\n  \n  filterComplex.push(\n    `[${bgmIndex}:a]volume=0.15,afade=t=in:st=0:d=1,afade=t=out:st=${fadeOutTime}:d=1,apad=pad_dur=${totalDuration}[bgm_faded]`\n  );\n  filterComplex.push(\n    `[${narrationIndex}:a]afade=t=out:st=${fadeOutTime}:d=1,apad=pad_dur=${totalDuration}[narration_padded]`\n  );\n  filterComplex.push(\n    `[narration_padded][bgm_faded]amix=inputs=2:duration=longest[final_audio]`\n  );\n  \n  // 6. 최종 FFmpeg 명령어 조립 - 🎯 수정: 동적 총 길이 적용\n  const ffmpegCommand = [\n    'ffmpeg -y',\n    inputs.join(' '),\n    `-filter_complex \"${filterComplex.join(';')}\"`,\n    '-map [final_video]',\n    '-map [final_audio]',\n    '-c:v libx264',\n    '-preset medium',\n    '-crf 18',\n    '-profile:v high',\n    '-level:v 4.0',\n    '-pix_fmt yuv420p',\n    '-r 60', // 60fps 출력 유지\n    '-s 1080x1920',\n    '-c:a aac',\n    '-b:a 320k',\n    '-ar 48000',\n    `-t ${totalDuration}`, // 🎯 핵심 수정: 동적 총 길이 사용\n    '-movflags +faststart',\n    '-avoid_negative_ts make_zero',\n    'output_final_video.mp4'\n  ].join(' ');\n  \n  return ffmpegCommand;\n}\n\n// 다운로드 명령어 생성\nfunction generateDownloadCommands() {\n  const commands = [];\n  \n  matchedSegments.forEach((segment, i) => {\n    const normalizedUrl = normalizeGoogleDriveUrl(segment.url);\n    \n    if (segment.type === 'generated_image') {\n      commands.push(`wget -O \"segment_${i}.png\" \"${normalizedUrl}\"`);\n    } else if (segment.type === 'generated_video') {\n      commands.push(`wget -O \"segment_${i}.mp4\" \"${normalizedUrl}\"`);\n    } else if (segment.type === 'animated_logo') {\n      commands.push(`wget -O \"segment_${i}.mp4\" \"${normalizedUrl}\"`);\n    }\n  });\n  \n  // 🎯 수정: 나레이션 오디오를 원본 파일명으로 저장\n  if (narrationAudio) {\n    const normalizedNarrationUrl = normalizeGoogleDriveUrl(narrationAudio.url);\n    const narrationFileName = narrationAudio.name; // 원본 파일명 사용\n    commands.push(`wget -O \"${narrationFileName}\" \"${normalizedNarrationUrl}\"`);\n  }\n  \n  // 🎯 수정: BGM도 원본 파일명으로 저장\n  if (backgroundMusic) {\n    const normalizedBgmUrl = normalizeGoogleDriveUrl(backgroundMusic.url);\n    const bgmFileName = backgroundMusic.name; // 원본 파일명 사용\n    commands.push(`wget -O \"${bgmFileName}\" \"${normalizedBgmUrl}\"`);\n  }\n  \n  return commands;\n}\n\n// ASS 자막 파일 생성\nfunction generateSubtitleContent() {\n  if (!wordSubtitleData || !wordSubtitleData.subtitleFiles || !wordSubtitleData.subtitleFiles.ass) {\n    return `[Script Info]\nTitle: Default Subtitle\nScriptType: v4.00+\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,2,10,10,10,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text`;\n  }\n  \n  const assData = wordSubtitleData.subtitleFiles.ass;\n  \n  if (typeof assData === 'object' && assData.content) {\n    console.log('📝 자막 데이터에서 content 필드 추출 중...');\n    return assData.content.replace(/\\\\n/g, '\\n');\n  } else if (typeof assData === 'string') {\n    return assData;\n  } else {\n    console.log('⚠️ 자막 데이터 형식을 인식할 수 없습니다. 기본 자막 사용.');\n    return `[Script Info]\nTitle: Default Subtitle\nScriptType: v4.00+\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,2,10,10,10,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text`;\n  }\n}\n\n// 모든 영상 세그먼트 속도 조정 스크립트\nfunction generateVideoAdjustmentScript() {\n  const videoSegments = matchedSegments.filter(segment => segment.type === 'generated_video');\n  \n  if (videoSegments.length === 0) {\n    return '';\n  }\n  \n  let script = '\\n# 영상 세그먼트들 동적 속도 조정\\n';\n  \n  videoSegments.forEach((segment, index) => {\n    const segmentIndex = matchedSegments.findIndex(s => s.segmentId === segment.segmentId);\n    const targetDuration = segment.timing.duration;\n    \n    script += `\n# 세그먼트 ${segmentIndex} 동적 속도 조정\nORIGINAL_DURATION_${segmentIndex}=$(ffprobe -v quiet -show_entries format=duration -of csv=p=0 segment_${segmentIndex}.mp4)\nTARGET_DURATION_${segmentIndex}=${targetDuration}\nSPEED_FACTOR_${segmentIndex}=$(awk -v o=\"$ORIGINAL_DURATION_${segmentIndex}\" -v d=\"$TARGET_DURATION_${segmentIndex}\" 'BEGIN{printf \"%.6f\", d/o}')\necho \"세그먼트 ${segmentIndex}: 원본 \\${ORIGINAL_DURATION_${segmentIndex}}초 → 목표 ${targetDuration}초 (SPEED_FACTOR: \\${SPEED_FACTOR_${segmentIndex}})\"\n\nffmpeg -y -i \"segment_${segmentIndex}.mp4\" \\\\\n  -vf \"scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,setpts=\\${SPEED_FACTOR_${segmentIndex}}*PTS,fps=60\" \\\\\n  -c:v libx264 -preset fast -crf 23 -pix_fmt yuv420p -an \\\\\n  \"adjusted_segment_${segmentIndex}.mp4\"\necho \"✅ adjusted_segment_${segmentIndex}.mp4 생성 완료\"\n`;\n  });\n  \n  return script;\n}\n\n// 메인 실행\nconst ffmpegCommand = generateFFmpegCommand();\nconst downloadCommands = generateDownloadCommands();\nconst subtitleContent = generateSubtitleContent();\nconst videoAdjustmentScript = generateVideoAdjustmentScript();\n\n// 🎯 총 길이 계산 로직 추가\nconst totalDuration = matchedSegments[matchedSegments.length - 1].timing.endTime;\n\n// 🎯 추가: 파일명 정보\nconst narrationFileName = narrationAudio ? narrationAudio.name : 'narration.mp3';\nconst bgmFileName = backgroundMusic ? backgroundMusic.name : 'bgm.mp3';\n\n// 결과 생성\nconst result = {\n  success: true,\n  workDir: workDir,\n  ffmpegCommand: ffmpegCommand,\n  totalDuration: totalDuration, // 🎯 추가: 총 길이 정보\n  \n  script: `#!/bin/bash\n# === 세로 영상 생성 스크립트 (타이밍 문제 해결 v5 + 파일명 수정) ===\n# 생성 시각: ${new Date().toLocaleString('ko-KR')}\n# 작업 폴더: ${workDir}\n# 해상도: 1080x1920 (9:16 세로 비율)\n# 총 길이: ${totalDuration}초 (D+2 구조)\n# 수정사항: 타이밍 로직 수정 + 로고 세그먼트 포함 + 원본 파일명 사용\n\necho \"📱 세로 영상 생성 시작 (타이밍 문제 해결 v5 + 파일명 수정)\"\necho \"📏 목표 총 길이: ${totalDuration}초\"\necho \"🎧 나레이션 파일명: ${narrationFileName}\"\necho \"🎵 BGM 파일명: ${bgmFileName}\"\n\n# 작업 폴더 생성 및 이동\nmkdir -p \"${workDir}\"\ncd \"${workDir}\"\necho \"📁 작업 폴더 생성: ${workDir}\"\n\n# 환경 확인 및 도구 설치\necho \"🔍 환경 확인:\"\necho \"  - 현재 경로: $(pwd)\"\necho \"  - wget 사용 가능: $(which wget || echo 'wget 없음')\"\necho \"  - ffmpeg 사용 가능: $(which ffmpeg || echo 'ffmpeg 없음')\"\n\nif ! command -v wget &> /dev/null; then\n    echo \"📦 wget 설치 중...\"\n    apk add --no-cache wget\nfi\n\nif ! command -v ffmpeg &> /dev/null; then\n    echo \"📦 ffmpeg 설치 중...\"\n    apk add --no-cache ffmpeg\nfi\n\n# 파일 다운로드\necho \"📥 파일 다운로드 중...\"\n${downloadCommands.map(cmd => `echo \"  ${cmd}\"\n${cmd}\necho \"  다운로드 결과: $?\"`).join('\\n')}\n\necho \"✅ 모든 파일 다운로드 완료\"\n\n# 다운로드된 파일 확인\necho \"📂 다운로드된 파일 목록:\"\nls -la\necho \"🎧 나레이션 파일 확인: $(ls -lh \"${narrationFileName}\" 2>/dev/null || echo '파일 없음')\"\necho \"🎵 BGM 파일 확인: $(ls -lh \"${bgmFileName}\" 2>/dev/null || echo '파일 없음')\"\n\n# ASS 자막 파일 생성\ncat > subtitle.ass << 'EOF'\n${subtitleContent}\nEOF\n\necho \"📝 ASS 자막 파일 생성 완료\"\n\n${videoAdjustmentScript}\n\n# 최종 영상 합성 FFmpeg 실행\necho \"⚙️ 최종 영상 합성 FFmpeg 실행 중... (1080x1920, 60fps, ${totalDuration}초)\"\necho \"🎯 핵심 수정사항:\"\necho \"  1. ✅ 총 길이를 마지막 세그먼트 endTime(${totalDuration}초)으로 설정\"\necho \"  2. ✅ 모든 ${matchedSegments.length}개 세그먼트 포함 (로고 포함)\"\necho \"  3. ✅ 동적 타이밍 계산 적용\"\necho \"  4. ✅ 원본 파일명 사용 (나레이션: ${narrationFileName}, BGM: ${bgmFileName})\"\n\n${ffmpegCommand}\n\nif [ $? -eq 0 ]; then\n    echo \"✅ 세로 영상 생성 완료: output_final_video.mp4 (타이밍 문제 해결 v5 + 파일명 수정)\"\n    echo \"📊 최종 파일 정보:\"\n    ls -lh output_final_video.mp4\n    \n    echo \"🎯 해상도 확인:\"\n    ffprobe -v quiet -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 output_final_video.mp4\n    \n    echo \"🕐 영상 길이 확인:\"\n    ACTUAL_DURATION=$(ffprobe -v quiet -show_entries format=duration -of csv=p=0 output_final_video.mp4)\n    echo \"$ACTUAL_DURATION\"\n    echo \"🎯 목표 길이: ${totalDuration}초, 실제 길이: \\${ACTUAL_DURATION}초\"\n    \n    echo \"🎬 프레임레이트 확인:\"\n    ffprobe -v quiet -select_streams v:0 -show_entries stream=r_frame_rate -of csv=s=x:p=0 output_final_video.mp4\nelse\n    echo \"❌ 세로 영상 생성 실패\"\n    echo \"📝 실패 원인 분석을 위한 파일 목록:\"\n    ls -la\n    exit 1\nfi\n\necho \"🎯 세로 영상 렌더링 완료: ${workDir}/output_final_video.mp4\"\necho \"📱 해상도: 1080x1920 (Instagram Reels, YouTube Shorts, TikTok 최적화)\"\necho \"📐 총 길이: ${totalDuration}초 (D+2 구조: 자막+세그먼트5확장+로고)\"\necho \"🎵 오디오: 나레이션(${narrationFileName}) + BGM(${bgmFileName}) 믹싱\"\necho \"🎬 세그먼트: ${matchedSegments.length}개 모두 포함\"\necho \"🕐 프레임레이트: 60fps (모든 세그먼트 통일)\"\necho \"🔧 주요 수정사항: 동적 타이밍 계산 + 로고 세그먼트 포함 + 원본 파일명 사용\"\n`,\n\n  downloadCommands: downloadCommands,\n  \n  metadata: {\n    timestamp: new Date().toISOString(),\n    workDir: workDir,\n    resolution: \"1080x1920\",\n    aspectRatio: \"9:16\",\n    framerate: 60,\n    segments: matchedSegments.length,\n    totalDuration: totalDuration,\n    narrationFileName: narrationFileName,\n    bgmFileName: bgmFileName,\n    fixes: [\n      \"dynamic_total_duration_calculation\",\n      \"all_segments_included\", \n      \"logo_segment_processing\",\n      \"timing_logic_fixed\",\n      \"original_filename_usage\"\n    ],\n    processingMethod: \"dynamic_timing_calculation_v5_filename_fix\"\n  },\n  \n  message: `타이밍 문제 해결 완료: 총 ${totalDuration}초 (D+2 구조), ${matchedSegments.length}개 세그먼트 모두 포함, 원본 파일명 사용`\n};\n\nconsole.log('\\n✅ Simple Video Processor 완료 (타이밍 문제 해결 + 파일명 수정):');\nconsole.log(`  📏 총 길이: ${totalDuration}초 (마지막 세그먼트 endTime 기준)`);\nconsole.log(`  📹 총 세그먼트: ${matchedSegments.length}개`);\nconsole.log(`  🎧 나레이션 파일명: ${narrationFileName}`);\nconsole.log(`  🎵 BGM 파일명: ${bgmFileName}`);\nconsole.log(`  🔧 주요 수정사항:`);\nconsole.log(`    1. ✅ 총 길이를 동적으로 계산 (${totalDuration}초)`);\nconsole.log(`    2. ✅ 모든 세그먼트 포함 (로고 포함)`);\nconsole.log(`    3. ✅ concat 필터 세그먼트 수 일치`);\nconsole.log(`    4. ✅ FFmpeg duration 옵션 수정`);\nconsole.log(`    5. ✅ 원본 파일명 사용으로 캐싱 문제 해결`);\nconsole.log(`  🎬 출력: 1080x1920, 60fps, ${totalDuration}초`);\n\nreturn [result];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        -1000
+      ],
+      "id": "fb88f7b8-b38a-4fc3-8236-9000ee289f38",
+      "name": "FFmpeg Script Gen",
+      "executeOnce": true,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// === File-based Script Executor v1 (수정됨) ===\n// Write Binary File 노드용 코드: bash 스크립트를 파일로 저장\nconsole.log('📝 File-based Script Executor v1 시작');\nconsole.log('🎬 스크립트를 파일로 저장하여 실행 준비');\n\n// 입력 데이터 안전하게 가져오기 (배열 형태 처리)\nlet inputData;\nconst firstInput = $input.first().json;\n\n// 배열인지 확인하고 첫 번째 요소 추출\nif (Array.isArray(firstInput)) {\n  inputData = firstInput[0];\n  console.log('📦 배열 형태 입력 데이터 감지, 첫 번째 요소 추출');\n} else {\n  inputData = firstInput;\n  console.log('📦 객체 형태 입력 데이터 감지');\n}\n\nconsole.log('📊 입력 데이터 키들:', Object.keys(inputData));\nconsole.log('🔍 입력 데이터 타입:', typeof inputData);\n\n// bash 스크립트 안전하게 추출 (실제 필드명에 맞게 수정)\nlet bashScript;\nif (inputData.script) {\n  bashScript = inputData.script;\n  console.log('✅ script 필드에서 스크립트 발견');\n} else if (inputData.bashScript) {\n  bashScript = inputData.bashScript;\n  console.log('✅ bashScript 필드에서 스크립트 발견');\n} else if (inputData.executeCommand) {\n  bashScript = inputData.executeCommand;\n  console.log('✅ executeCommand 필드에서 스크립트 발견');\n} else {\n  throw new Error('script, bashScript 또는 executeCommand가 입력 데이터에 없습니다. 사용 가능한 키: ' + Object.keys(inputData).join(', '));\n}\n\n// 스크립트 유효성 검사\nif (!bashScript || typeof bashScript !== 'string') {\n  throw new Error('유효하지 않은 bash 스크립트입니다');\n}\n\nconsole.log('📄 스크립트 길이:', bashScript.length, '문자');\nconsole.log('🔧 파일 기반 실행으로 bash 파싱 문제 해결');\n\n// Write Binary File 노드에서 사용할 수 있도록 바이너리 데이터로 변환\nconst scriptBuffer = Buffer.from(bashScript, 'utf8');\n\n// 파일명 생성 (타임스탬프 포함)\nconst timestamp = new Date().toISOString().slice(0,19).replace(/[:\\-T]/g, '');\nconst scriptFileName = `video_processor_v1_${timestamp}.sh`;\n\nconsole.log('💾 생성될 파일명:', scriptFileName);\nconsole.log('📍 저장 경로: /tmp/' + scriptFileName);\n\n// Write Binary File 노드가 받을 데이터 형식으로 반환\nconst result = {\n  // 원본 데이터 유지\n  ...inputData,\n  \n  // 파일 정보\n  scriptFile: {\n    fileName: scriptFileName,\n    filePath: `/tmp/${scriptFileName}`,\n    content: bashScript,\n    size: scriptBuffer.length,\n    encoding: 'utf8'\n  },\n  \n  // Execute Command에서 사용할 명령어들\n  executionCommands: [\n    `chmod +x /tmp/${scriptFileName}`,\n    `/tmp/${scriptFileName}`\n  ],\n  \n  // 단계별 실행 가이드\n  executionSteps: [\n    '1. Write Binary File 노드에서 스크립트 파일 생성',\n    '2. Execute Command 노드에서 파일 실행 권한 부여', \n    '3. Execute Command 노드에서 스크립트 실행'\n  ],\n  \n  // 메타데이터\n  processingMethod: 'file_based_execution_v1',\n  bashParsingIssueResolved: true,\n  scriptVersion: 'v1',\n  timestamp: new Date().toISOString(),\n  \n  // 원본 스크립트 정보\n  originalScriptSource: 'script field from input data'\n};\n\nconsole.log('✅ File-based Script Executor v1 완료');\nconsole.log('📋 실행 단계:', result.executionSteps);\nconsole.log('⚡ 실행 명령어:', result.executionCommands);\n\n// Write Binary File 노드가 인식할 수 있는 바이너리 데이터 반환\nreturn [{\n  json: result,\n  binary: {\n    data: {\n      data: scriptBuffer,\n      mimeType: 'text/plain',\n      fileName: scriptFileName,\n      fileExtension: 'sh'\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -1000
+      ],
+      "id": "4dec3d88-ce87-4dcb-ba34-666624f8487d",
+      "name": "Prep Script File",
+      "executeOnce": true,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/tmp/{{ $json.scriptFile.fileName }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        -1000
+      ],
+      "id": "298965de-d6f5-40b7-ba49-5eefe62c0869",
+      "name": "Write Script File"
+    },
+    {
+      "parameters": {
+        "command": "=mkdir -p /tmp/video_work"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        -1000
+      ],
+      "id": "b2aad8ff-2f47-4ddb-bd50-b7837c83204c",
+      "name": "Execute FFmpeg Command"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.1-preview-2025-11-14",
+          "mode": "list",
+          "cachedResultName": "GPT-5.1-Preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=다음 나레이션 내용을 바탕으로 YouTube Shorts용 메타데이터를 생성해주세요:\n\n나레이션:{{ $('whisper data processor1').first().json.segmentTimings.map(segment => segment.text).join(' ') }}\n위 내용에 맞는 제목, 설명, 태그를 생성하되:\n- 제목: 클릭률 높은 60자 이내 제목\n- 설명: 150자 이내 + 해시태그 포함  \n- 태그: 유튜브 쇼츠에 최적화된 키워드 포함한 태그 10개\n\nJSON 형식으로 출력해주세요."
+            },
+            {
+              "content": "=# System Prompt: YouTube Shorts 메타데이터 생성\n\n당신은 YouTube Shorts용 메타데이터 생성 전문가입니다. 주어진 나레이션 내용을 분석하여 최적의 메타데이터를 생성하세요.\n\n## 생성 규칙\n\n### YouTube Tags (10 개)\n- 나레이션 내용에서 **핵심 키워드** 추출\n- **YouTube Shorts, 쇼츠, 세로영상** 필수 포함\n- **AI, 인공지능, 자동화** 기술 관련 태그\n- **뉴스, 속보, 최신** 시의성 태그\n- **트렌드, 화제, 이슈** 확산성 태그\n\n### 제목 (Title)\n- **60자 이내**\n- **충격적이고 클릭하고 싶은** 제목\n- **핵심 키워드** 포함\n- **감정 유발** 단어 사용 (놀라운, 충격, 대박 등)\n\n### 설명 (Description)\n- **150자 이내**\n- **영상 요약** + **관련 해시태그**\n- **구독 유도** 문구 포함\n\n## 출력 형식\n```json\n{\n  \"title\": \"생성된 제목\",\n  \"description\": \"생성된 설명\",\n  \"tags\": [\"태그1\", \"태그2\", \"태그3\", ...]\n}\n```",
+              "role": "system"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1400,
+        -1000
+      ],
+      "id": "c4cd2d0c-9b3f-4493-914c-a4ce6e02345c",
+      "name": "Generate Metadata (GPT-5)",
+      "credentials": {
+        "openAiApi": {
+          "id": "SU7j97M3VqBRETt6",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $('Metadata Generate1').item.json.message.content.title }}",
+        "regionCode": "KR",
+        "categoryId": "=28",
+        "options": {
+          "description": "={{ $('Metadata Generate1').item.json.message.content.description }}",
+          "notifySubscribers": true,
+          "privacyStatus": "unlisted",
+          "selfDeclaredMadeForKids": false,
+          "tags": "={{ $('Metadata Generate1').item.json.message.content.tags.join(',') }}"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        -1000
+      ],
+      "id": "6deffa95-94ee-48cb-a33f-397fa78a1010",
+      "name": "YouTube Upload (KR)",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "cpLeI7xNofzl0Q7R",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.blotato.com/v1/publish",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "blotato-api-key",
+              "value": "YOUR_BLOTATO_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "jsonBody": "={\n  \"videoUrl\": \"{{ $json.videoUrl }}\",\n  \"title\": \"{{ $json.title }}\",\n  \"description\": \"{{ $json.description }}\",\n  \"platforms\": [\"instagram\", \"tiktok\", \"facebook\"]\n}",
+        "options": {}
+      },
+      "name": "Blotato Multi-Platform",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1800,
+        -1000
+      ],
+      "id": "blotato_node"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1AyIUgp55Rr88R5KMGvkBfMLCucWXsT0_AjhaLhV-_J8",
+          "mode": "list",
+          "cachedResultName": "AI news",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AyIUgp55Rr88R5KMGvkBfMLCucWXsT0_AjhaLhV-_J8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AyIUgp55Rr88R5KMGvkBfMLCucWXsT0_AjhaLhV-_J8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Webhook').item.json.body.row_number }}",
+            "narration": "={{ $json.output.narration }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Link",
+              "displayName": "Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "PubDate",
+              "displayName": "PubDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Thread summary",
+              "displayName": "Thread summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "\bstart blog?",
+              "displayName": "\bstart blog?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "blog done",
+              "displayName": "blog done",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "start video?",
+              "displayName": "start video?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "narration",
+              "displayName": "narration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "narration_confirmed",
+              "displayName": "narration_confirmed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "video_count",
+              "displayName": "video_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "continue video?",
+              "displayName": "continue video?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "video links",
+              "displayName": "video links",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "newsContent",
+              "displayName": "newsContent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Summary_Eng",
+              "displayName": "Summary_Eng",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2000,
+        -1000
+      ],
+      "id": "58db3cde-b1a8-4ce8-b524-ac819923ca13",
+      "name": "Log Final (AutoMap)",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "qHzPZhMeMIC0bqve",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily Trigger": {
+      "main": [
+        [
+          {
+            "node": "Prepare New Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If: Generate New?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: Generate New?": {
+      "main": [
+        [
+          {
+            "node": "Prepare New Data",
+            "type": "main",
+            "index": 0
+            "node": "Log Script (AutoMap)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Script (AutoMap)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Sentences",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Sentences": {
+      "main": [
+        [
+          {
+            "node": "Split Sentences",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Sentences": {
+      "main": [
+        [
+          {
+            "node": "Wait 3s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 3s": {
+      "main": [
+        [
+          {
+            "node": "Generate Image Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image Prompt": {
+      "main": [
+        [
+          {
+            "node": "NanoBanana Image Gen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-5.1 Model (Image)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Image Prompt",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NanoBanana Image Gen": {
+      "main": [
+        [
+          {
+            "node": "Sora-2 (OpenAI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sora-2 (OpenAI)": {
+      "main": [
+        [
+          {
+            "node": "OpenAI TTS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI TTS": {
+      "main": [
+        [
+          {
+            "node": "Whisper (Word-Level)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Whisper (Word-Level)": {
+      "main": [
+        [
+          {
+            "node": "Generate ASS Subtitles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate ASS Subtitles": {
+      "main": [
+        [
+          {
+            "node": "Data Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Aggregator": {
+      "main": [
+        [
+          {
+            "node": "FFmpeg Script Gen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FFmpeg Script Gen": {
+      "main": [
+        [
+          {
+            "node": "Prep Script File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Script File": {
+      "main": [
+        [
+          {
+            "node": "Write Script File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Script File": {
+      "main": [
+        [
+          {
+            "node": "Execute FFmpeg Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute FFmpeg Command": {
+      "main": [
+        [
+          {
+            "node": "Generate Metadata (GPT-5)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Metadata (GPT-5)": {
+      "main": [
+        [
+          {
+            "node": "YouTube Upload (KR)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YouTube Upload (KR)": {
+      "main": [
+        [
+          {
+            "node": "Blotato Multi-Platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Blotato Multi-Platform": {
+      "main": [
+        [
+          {
+            "node": "Log Final (AutoMap)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "restored_v7_ultimate"
+  }
+}

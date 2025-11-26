@@ -1,0 +1,784 @@
+{
+    "name": "Shorts_NextLevel_v7_Phase3_Ultimate",
+    "nodes": [
+        {
+            "parameters": {
+                "content": "# Phase 3: Ultimate\n\nPhase 2 + 고급 기능\n\n## 추가\n- Kling v2 Pro\n- Metadata (3 angles)\n- Telegram 알림\n- Batch Processing\n\n## 비용\n₩1,835/영상",
+                "height": 400,
+                "width": 450,
+                "color": 6
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                240,
+                300
+            ],
+            "id": "sticky_info",
+            "name": "Info"
+        },
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "hours",
+                            "triggerAtHour": 6
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                460,
+                460
+            ],
+            "id": "trigger_schedule",
+            "name": "Daily 6AM"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "a1",
+                            "name": "kling_enabled",
+                            "value": true,
+                            "type": "boolean"
+                        },
+                        {
+                            "id": "a2",
+                            "name": "kling_scenes",
+                            "value": [
+                                2,
+                                4
+                            ],
+                            "type": "array"
+                        },
+                        {
+                            "id": "a3",
+                            "name": "test_mode",
+                            "value": false,
+                            "type": "boolean"
+                        },
+                        {
+                            "id": "a4",
+                            "name": "topic",
+                            "value": "건강 주제",
+                            "type": "string"
+                        },
+                        {
+                            "id": "a5",
+                            "name": "max_retries",
+                            "value": 3,
+                            "type": "number"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                680,
+                460
+            ],
+            "id": "config",
+            "name": "Config"
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "=Topic: {{ $json.topic }}\n\n30초 한국어 시니어 건강 쇼츠 스크립트를 작성하세요.\n\nJSON만 출력.",
+                "options": {
+                    "systemMessage": "시니어 건강 쇼츠 전문 작가. JSON만 출력."
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 2,
+            "position": [
+                900,
+                460
+            ],
+            "id": "agent_script",
+            "name": "Generate Script"
+        },
+        {
+            "parameters": {
+                "modelName": "gemini-2.5-flash"
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                900,
+                640
+            ],
+            "id": "gemini_flash",
+            "name": "Gemini 2.5 Flash"
+        },
+        {
+            "parameters": {
+                "jsCode": "let rawOutput = $json.output || \"\";\nrawOutput = rawOutput.replace(/```json\\s*/g, '').replace(/```\\s*/g, '');\nconst jsonMatch = rawOutput.match(/\\{[\\s\\S]*\\}/);\nif (!jsonMatch) return [{ json: { valid: false, fallback: true, data: {narration: \"건강 정보\", scenes: [{id: 1, visual_type: \"heaven\", duration: 6, prompt: \"healthy\", overlay_text: \"Good\"}, {id: 2, visual_type: \"hell\", duration: 6, prompt: \"bad\", overlay_text: \"Bad\"}, {id: 3, visual_type: \"heaven\", duration: 6, prompt: \"good\", overlay_text: \"Energy\"}, {id: 4, visual_type: \"hell\", duration: 6, prompt: \"damage\", overlay_text: \"Warning\"}, {id: 5, visual_type: \"heaven\", duration: 6, prompt: \"brain\", overlay_text: \"Optimal\"}]}}}];\ntry {\n  const parsed = JSON.parse(jsonMatch[0]);\n  if (!parsed.narration || !parsed.scenes || parsed.scenes.length !== 5) throw new Error(\"Invalid\");\n  return [{ json: { valid: true, data: parsed } }];\n} catch (error) {\n  return [{ json: { valid: false, fallback: true, data: {narration: \"건강 정보\", scenes: [{id: 1, visual_type: \"heaven\", duration: 6, prompt: \"healthy\", overlay_text: \"Good\"}, {id: 2, visual_type: \"hell\", duration: 6, prompt: \"bad\", overlay_text: \"Bad\"}, {id: 3, visual_type: \"heaven\", duration: 6, prompt: \"good\", overlay_text: \"Energy\"}, {id: 4, visual_type: \"hell\", duration: 6, prompt: \"damage\", overlay_text: \"Warning\"}, {id: 5, visual_type: \"heaven\", duration: 6, prompt: \"brain\", overlay_text: \"Optimal\"}]}}}];\n}"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1120,
+                460
+            ],
+            "id": "validate",
+            "name": "Validate JSON"
+        },
+        {
+            "parameters": {
+                "resource": "audio",
+                "model": "gpt-4o-audio",
+                "input": "={{ $json.data.narration }}",
+                "voice": "onyx",
+                "options": {
+                    "speed": 1.1
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.openAi",
+            "typeVersion": 1,
+            "position": [
+                1340,
+                460
+            ],
+            "id": "tts",
+            "name": "TTS"
+        },
+        {
+            "parameters": {
+                "fieldToSplitOut": "data.scenes"
+            },
+            "type": "n8n-nodes-base.splitOut",
+            "typeVersion": 1,
+            "position": [
+                1340,
+                640
+            ],
+            "id": "split_scenes",
+            "name": "Split Scenes"
+        },
+        {
+            "parameters": {
+                "batchSize": 2
+            },
+            "type": "n8n-nodes-base.splitInBatches",
+            "typeVersion": 3,
+            "position": [
+                1560,
+                640
+            ],
+            "id": "batch_limit",
+            "name": "Batch"
+        },
+        {
+            "parameters": {
+                "url": "https://fal.run/fal-ai/flux-pro/v1.1-ultra",
+                "method": "POST",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Key YOUR_FAL_API_KEY"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\"prompt\": \"{{ $json.prompt }}\", \"image_size\": {\"width\": 1080, \"height\": 1920}, \"num_inference_steps\": 28, \"guidance_scale\": 3.5}"
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1780,
+                640
+            ],
+            "id": "flux",
+            "name": "Flux"
+        },
+        {
+            "parameters": {
+                "amount": 12
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.1,
+            "position": [
+                2000,
+                640
+            ],
+            "id": "wait_gen",
+            "name": "Wait 12S"
+        },
+        {
+            "parameters": {
+                "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+                "method": "POST",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "x-goog-api-key",
+                            "value": "YOUR_GEMINI_KEY"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\"contents\": [{\"parts\": [{\"text\": \"Rate 1-10 for Gore. >6=UNSAFE, <=6=SAFE\"}, {\"inline_data\": {\"mime_type\": \"image/jpeg\", \"data\": \"{{ $json.images[0].data }}\"}}]}]}"
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                2220,
+                640
+            ],
+            "id": "vision",
+            "name": "Vision"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "string": [
+                        {
+                            "value1": "={{ $json.candidates[0].content.parts[0].text }}",
+                            "operation": "contains",
+                            "value2": "SAFE"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 3,
+            "position": [
+                2440,
+                640
+            ],
+            "id": "safety_switch",
+            "name": "Is Safe?"
+        },
+        {
+            "parameters": {
+                "jsCode": "const retryCount = $json.retryCount || 0;\nif (retryCount >= 3) return [{ json: { action: \"fallback\", retryCount } }];\nreturn [{ json: { ...$json, retryCount: retryCount + 1, action: \"retry\" } }];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                2440,
+                840
+            ],
+            "id": "retry",
+            "name": "Retry"
+        },
+        {
+            "parameters": {
+                "operation": "append",
+                "documentId": {
+                    "__rl": true,
+                    "value": "YOUR_ERROR_LOG_ID",
+                    "mode": "id"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "gid=0",
+                    "mode": "list"
+                },
+                "columns": {
+                    "mappingMode": "defineBelow",
+                    "value": {
+                        "timestamp": "={{ $now.format('yyyy-MM-dd HH:mm') }}",
+                        "scene_id": "={{ $json.id }}",
+                        "error": "UNSAFE"
+                    }
+                }
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.5,
+            "position": [
+                2660,
+                840
+            ],
+            "id": "log_error",
+            "name": "Log Error"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "boolean": [
+                        {
+                            "value1": "={{ $('Config').item.json.kling_enabled }}",
+                            "value2": true
+                        },
+                        {
+                            "value1": "={{ $('Config').item.json.kling_scenes.includes($json.id) }}",
+                            "value2": true
+                        }
+                    ],
+                    "combineOperation": "all"
+                }
+            },
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 3,
+            "position": [
+                2880,
+                640
+            ],
+            "id": "kling_switch",
+            "name": "Use Kling?"
+        },
+        {
+            "parameters": {
+                "url": "https://api.kling.ai/v2/video/generation",
+                "method": "POST",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer YOUR_KLING_KEY"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\"image_url\": \"{{ $json.images[0].url }}\", \"prompt\": \"subtle motion, steam, breathing\", \"model\": \"kling-v2-pro\", \"duration\": 5}"
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                3100,
+                640
+            ],
+            "id": "kling",
+            "name": "Kling v2"
+        },
+        {
+            "parameters": {
+                "amount": 30
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.1,
+            "position": [
+                3320,
+                640
+            ],
+            "id": "wait_kling",
+            "name": "Wait 30S"
+        },
+        {
+            "parameters": {
+                "mode": "combine",
+                "combinationMode": "mergeByPosition"
+            },
+            "type": "n8n-nodes-base.merge",
+            "typeVersion": 3,
+            "position": [
+                3540,
+                550
+            ],
+            "id": "merge",
+            "name": "Merge"
+        },
+        {
+            "parameters": {
+                "command": "=cd /tmp && for i in {1..5}; do curl -o image_$i.png \"{{ $json.images[$i-1].url }}\"; done && curl -o narration.mp3 \"{{ $('TTS').item.json.audio_url }}\" && ffmpeg -y -framerate 1/6 -i image_%d.png -i narration.mp3 -vf \"scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,zoompan=z='min(zoom+0.0015,1.5)':d=125:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920,fps=60\" -c:v libx264 -pix_fmt yuv420p -c:a aac -shortest output.mp4"
+            },
+            "type": "n8n-nodes-base.executeCommand",
+            "typeVersion": 1,
+            "position": [
+                3760,
+                550
+            ],
+            "id": "ffmpeg",
+            "name": "FFmpeg"
+        },
+        {
+            "parameters": {
+                "operation": "read",
+                "fileSelector": "/tmp/output.mp4"
+            },
+            "type": "n8n-nodes-base.readWriteFile",
+            "typeVersion": 1,
+            "position": [
+                3980,
+                550
+            ],
+            "id": "read_video",
+            "name": "Read Video"
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "=Generate 3 YouTube Shorts titles for: {{ $('Validate JSON').item.json.data.narration }}\n\nOutput JSON:\n{\n  \"titles\": [\n    {\"variant\": \"benefit\", \"text\": \"<40-55자>\"},\n    {\"variant\": \"urgency\", \"text\": \"<40-55자>\"},\n    {\"variant\": \"curiosity\", \"text\": \"<40-55자>\"}\n  ],\n  \"description\": \"<설명>\",\n  \"tags\": [\"시니어건강\", ...]\n}",
+                "options": {
+                    "systemMessage": "YouTube SEO expert. Output JSON only."
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 2,
+            "position": [
+                4200,
+                550
+            ],
+            "id": "metadata_agent",
+            "name": "Metadata"
+        },
+        {
+            "parameters": {
+                "modelName": "gemini-2.5-flash"
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                4200,
+                730
+            ],
+            "id": "gemini_metadata",
+            "name": "Gemini Meta"
+        },
+        {
+            "parameters": {
+                "resource": "video",
+                "operation": "upload",
+                "title": "={{ JSON.parse($json.output).titles[0].text }}",
+                "categoryId": "27",
+                "options": {
+                    "description": "={{ JSON.parse($json.output).description }}",
+                    "privacyStatus": "private",
+                    "tags": "={{ JSON.parse($json.output).tags.join(',') }}"
+                }
+            },
+            "type": "n8n-nodes-base.youTube",
+            "typeVersion": 1,
+            "position": [
+                4420,
+                550
+            ],
+            "id": "youtube",
+            "name": "YouTube"
+        },
+        {
+            "parameters": {
+                "operation": "append",
+                "documentId": {
+                    "__rl": true,
+                    "value": "YOUR_SHEETS_ID",
+                    "mode": "id"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "gid=0",
+                    "mode": "list"
+                },
+                "columns": {
+                    "mappingMode": "defineBelow",
+                    "value": {
+                        "timestamp": "={{ $now.format('yyyy-MM-dd HH:mm') }}",
+                        "topic": "={{ $('Config').item.json.topic }}",
+                        "video_url": "={{ $json.url }}",
+                        "status": "Uploaded"
+                    }
+                }
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.5,
+            "position": [
+                4640,
+                550
+            ],
+            "id": "log_success",
+            "name": "Log Success"
+        },
+        {
+            "parameters": {
+                "chatId": "YOUR_TELEGRAM_CHAT_ID",
+                "text": "=✅ YouTube 업로드 완료!\n\n주제: {{ $('Config').item.json.topic }}\nURL: {{ $('YouTube').item.json.url }}"
+            },
+            "type": "n8n-nodes-base.telegram",
+            "typeVersion": 1.1,
+            "position": [
+                4860,
+                550
+            ],
+            "id": "telegram_success",
+            "name": "Telegram Success"
+        },
+        {
+            "parameters": {
+                "chatId": "YOUR_TELEGRAM_CHAT_ID",
+                "text": "=❌ 에러 발생\n\n주제: {{ $('Config').item.json.topic }}\n단계: {{ $('Log Error').item.json.error }}"
+            },
+            "type": "n8n-nodes-base.telegram",
+            "typeVersion": 1.1,
+            "position": [
+                2660,
+                1040
+            ],
+            "id": "telegram_error",
+            "name": "Telegram Error"
+        }
+    ],
+    "connections": {
+        "Daily 6AM": {
+            "main": [
+                [
+                    {
+                        "node": "Config"
+                    }
+                ]
+            ]
+        },
+        "Config": {
+            "main": [
+                [
+                    {
+                        "node": "Generate Script"
+                    }
+                ]
+            ]
+        },
+        "Generate Script": {
+            "main": [
+                [
+                    {
+                        "node": "Validate JSON"
+                    }
+                ]
+            ]
+        },
+        "Gemini 2.5 Flash": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "Generate Script"
+                    }
+                ]
+            ]
+        },
+        "Validate JSON": {
+            "main": [
+                [
+                    {
+                        "node": "TTS"
+                    },
+                    {
+                        "node": "Split Scenes"
+                    }
+                ]
+            ]
+        },
+        "TTS": {
+            "main": [
+                [
+                    {
+                        "node": "Merge"
+                    }
+                ]
+            ]
+        },
+        "Split Scenes": {
+            "main": [
+                [
+                    {
+                        "node": "Batch"
+                    }
+                ]
+            ]
+        },
+        "Batch": {
+            "main": [
+                [
+                    {
+                        "node": "Flux"
+                    }
+                ]
+            ]
+        },
+        "Flux": {
+            "main": [
+                [
+                    {
+                        "node": "Wait 12S"
+                    }
+                ]
+            ]
+        },
+        "Wait 12S": {
+            "main": [
+                [
+                    {
+                        "node": "Vision"
+                    }
+                ]
+            ]
+        },
+        "Vision": {
+            "main": [
+                [
+                    {
+                        "node": "Is Safe?"
+                    }
+                ]
+            ]
+        },
+        "Is Safe?": {
+            "main": [
+                [
+                    {
+                        "node": "Use Kling?"
+                    }
+                ],
+                [
+                    {
+                        "node": "Retry"
+                    }
+                ]
+            ]
+        },
+        "Retry": {
+            "main": [
+                [
+                    {
+                        "node": "Flux"
+                    }
+                ],
+                [
+                    {
+                        "node": "Log Error"
+                    }
+                ]
+            ]
+        },
+        "Log Error": {
+            "main": [
+                [
+                    {
+                        "node": "Use Kling?"
+                    },
+                    {
+                        "node": "Telegram Error"
+                    }
+                ]
+            ]
+        },
+        "Use Kling?": {
+            "main": [
+                [
+                    {
+                        "node": "Kling v2"
+                    }
+                ],
+                [
+                    {
+                        "node": "Merge"
+                    }
+                ]
+            ]
+        },
+        "Kling v2": {
+            "main": [
+                [
+                    {
+                        "node": "Wait 30S"
+                    }
+                ]
+            ]
+        },
+        "Wait 30S": {
+            "main": [
+                [
+                    {
+                        "node": "Merge"
+                    }
+                ]
+            ]
+        },
+        "Merge": {
+            "main": [
+                [
+                    {
+                        "node": "FFmpeg"
+                    }
+                ]
+            ]
+        },
+        "FFmpeg": {
+            "main": [
+                [
+                    {
+                        "node": "Read Video"
+                    }
+                ]
+            ]
+        },
+        "Read Video": {
+            "main": [
+                [
+                    {
+                        "node": "Metadata"
+                    }
+                ]
+            ]
+        },
+        "Metadata": {
+            "main": [
+                [
+                    {
+                        "node": "YouTube"
+                    }
+                ]
+            ]
+        },
+        "Gemini Meta": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "Metadata"
+                    }
+                ]
+            ]
+        },
+        "YouTube": {
+            "main": [
+                [
+                    {
+                        "node": "Log Success"
+                    }
+                ]
+            ]
+        },
+        "Log Success": {
+            "main": [
+                [
+                    {
+                        "node": "Telegram Success"
+                    }
+                ]
+            ]
+        }
+    },
+    "pinData": {},
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "staticData": null,
+    "tags": [],
+    "triggerCount": 0,
+    "updatedAt": "2025-11-24T09:17:00.000Z",
+    "versionId": "v7-phase3-ultimate"
+}

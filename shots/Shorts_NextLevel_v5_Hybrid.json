@@ -1,0 +1,732 @@
+{
+    "name": "Shorts_NextLevel_v5_Hybrid",
+    "nodes": [
+        {
+            "parameters": {
+                "content": "# 1. Trend Arbitrage (Trend Hunter)",
+                "height": 240,
+                "width": 440,
+                "color": 4
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -1800,
+                -1400
+            ],
+            "id": "note_trend_hunter",
+            "name": "Note: Trend Hunter"
+        },
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "hours",
+                            "minutes": 0
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                -1740,
+                -1340
+            ],
+            "id": "trigger_schedule",
+            "name": "Daily Trend Scan"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Placeholder for Trend Arbitrage Logic\nreturn [{\n  json: {\n    topic: \"Mix Coffee & Vascular Health\",\n    trend_source: \"US YouTube (Dr. Berg)\",\n    velocity: \"High\",\n    keywords: [\"Mix Coffee\", \"Sugar\", \"Veins\"]\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -1540,
+                -1340
+            ],
+            "id": "mock_trend_data",
+            "name": "Get Trending Topic"
+        },
+        {
+            "parameters": {
+                "content": "# 2. Script & Prompts (AI Agent v2)",
+                "height": 340,
+                "width": 540,
+                "color": 5
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -1300,
+                -1400
+            ],
+            "id": "note_script",
+            "name": "Note: Script"
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "={{ $json.topic }}에 대한 30초 쇼츠 스크립트와 이미지 프롬프트를 작성하세요.\n\n# 스타일\n- 비주얼: Hyper-Realism (Flux Ultra), POV (천국) vs Endoscopy (지옥)\n- 캐릭터: Medical HUD (Figma Overlay)\n\n# 출력 형식\nJSON으로 출력:\n{\n  \"narration\": \"...\",\n  \"scenes\": [\n    {\"id\": 1, \"visual_type\": \"heaven\", \"prompt\": \"...\", \"overlay_text\": \"Heart Rate: 80\"},\n    {\"id\": 2, \"visual_type\": \"hell\", \"prompt\": \"...\", \"overlay_text\": \"WARNING: High Viscosity\"}\n  ]\n}",
+                "options": {
+                    "systemMessage": "You are a creative director for senior health shorts."
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 2,
+            "position": [
+                -1240,
+                -1340
+            ],
+            "id": "agent_script",
+            "name": "Generate Script & Prompts"
+        },
+        {
+            "parameters": {
+                "model": {
+                    "__rl": true,
+                    "value": "gpt-5-mini",
+                    "mode": "list",
+                    "cachedResultName": "gpt-5-mini"
+                },
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+            "typeVersion": 1,
+            "position": [
+                -1240,
+                -1160
+            ],
+            "id": "openai_model",
+            "name": "OpenAI Chat Model (Mini)"
+        },
+        {
+            "parameters": {
+                "operation": "append",
+                "documentId": {
+                    "__rl": true,
+                    "value": "1AyIUgp55Rr88R5KMGvkBfMLCucWXsT0_AjhaLhV-_J8",
+                    "mode": "list",
+                    "cachedResultName": "AI news"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "gid=0",
+                    "mode": "list",
+                    "cachedResultName": "Sheet1"
+                },
+                "columns": {
+                    "mappingMode": "defineBelow",
+                    "value": {
+                        "narration": "={{ $json.output.narration }}",
+                        "topic": "={{ $('Get Trending Topic').item.json.topic }}"
+                    },
+                    "matchingColumns": [],
+                    "schema": [
+                        {
+                            "id": "topic",
+                            "displayName": "topic",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "narration",
+                            "displayName": "narration",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.5,
+            "position": [
+                -1040,
+                -1340
+            ],
+            "id": "log_script",
+            "name": "Log Script to Sheet"
+        },
+        {
+            "parameters": {
+                "content": "# 3. Visual Generation & Archiving",
+                "height": 440,
+                "width": 1040,
+                "color": 6
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -1000,
+                -1400
+            ],
+            "id": "note_visuals",
+            "name": "Note: Visuals"
+        },
+        {
+            "parameters": {
+                "fieldToSplitOut": "scenes",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.splitOut",
+            "typeVersion": 1,
+            "position": [
+                -940,
+                -1340
+            ],
+            "id": "split_scenes",
+            "name": "Split Scenes"
+        },
+        {
+            "parameters": {
+                "url": "https://api.flux.pro/v2/generate",
+                "method": "POST",
+                "authentication": "headerAuth",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "prompt",
+                            "value": "={{ $json.prompt }} --style hyper-realistic --aspect-ratio 9:16 --model flux-ultra"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                -740,
+                -1340
+            ],
+            "id": "flux_generate",
+            "name": "Flux Ultra Generate"
+        },
+        {
+            "parameters": {
+                "authentication": "oAuth2",
+                "operation": "upload",
+                "name": "={{ $json.id }}_raw.png",
+                "driveId": {
+                    "__rl": true,
+                    "value": "My Drive",
+                    "mode": "list"
+                },
+                "folderId": {
+                    "__rl": true,
+                    "value": "YOUR_FOLDER_ID",
+                    "mode": "list"
+                }
+            },
+            "type": "n8n-nodes-base.googleDrive",
+            "typeVersion": 3,
+            "position": [
+                -640,
+                -1140
+            ],
+            "id": "drive_backup_img",
+            "name": "Backup to Drive"
+        },
+        {
+            "parameters": {
+                "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+                "method": "POST",
+                "authentication": "headerAuth",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\"text\": \"Rate this image 1-10 for 'Body Horror' or 'Gore'. If > 6, return 'UNSAFE'. If <= 6, return 'SAFE'.\"},\n        {\n          \"inline_data\": {\n            \"mime_type\": \"image/jpeg\",\n            \"data\": \"{{ $json.data }}\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                -540,
+                -1340
+            ],
+            "id": "gemini_safety",
+            "name": "Gemini 2.5 Vision Check"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "string": [
+                        {
+                            "value1": "={{ $json.candidates[0].content.parts[0].text }}",
+                            "operation": "contains",
+                            "value2": "SAFE"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2,
+            "position": [
+                -340,
+                -1340
+            ],
+            "id": "check_safety",
+            "name": "Is Safe?"
+        },
+        {
+            "parameters": {
+                "content": "# 4. Local Processing (FFmpeg & Whisper)",
+                "height": 340,
+                "width": 640,
+                "color": 3
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -100,
+                -1400
+            ],
+            "id": "note_local_process",
+            "name": "Note: Local Process"
+        },
+        {
+            "parameters": {
+                "jsCode": "// === Simple Video Processor (Restored Logic) ===\n// Generates FFmpeg command with Ken Burns effects and 60fps conversion\n\nconst matchedSegments = $input.all().map(item => item.json);\nconst totalDuration = matchedSegments.length * 5; // Approx duration\n\n// Generate FFmpeg filter complex for Ken Burns\nlet filterComplex = [];\nlet inputs = [];\n\nmatchedSegments.forEach((segment, i) => {\n  inputs.push(`-i segment_${i}.png`);\n  // Ken Burns Effect: Zoom in slightly over 5 seconds\n  filterComplex.push(`[${i}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=black,zoompan=z='min(zoom+0.0015,1.5)':d=125:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920,fps=60[v${i}]`);\n});\n\nconst concatFilter = matchedSegments.map((_, i) => `[v${i}]`).join('') + `concat=n=${matchedSegments.length}:v=1:a=0[outv]`;\nfilterComplex.push(concatFilter);\n\nconst ffmpegCommand = `ffmpeg -y ${inputs.join(' ')} -filter_complex \"${filterComplex.join(';')}\" -map \"[outv]\" -c:v libx264 -pix_fmt yuv420p output.mp4`;\n\nreturn [{\n  json: {\n    ffmpegCommand: ffmpegCommand,\n    totalDuration: totalDuration\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -40,
+                -1340
+            ],
+            "id": "ffmpeg_logic",
+            "name": "Generate FFmpeg Script"
+        },
+        {
+            "parameters": {
+                "command": "={{ $json.ffmpegCommand }}"
+            },
+            "type": "n8n-nodes-base.executeCommand",
+            "typeVersion": 1,
+            "position": [
+                160,
+                -1340
+            ],
+            "id": "execute_ffmpeg",
+            "name": "Execute FFmpeg"
+        },
+        {
+            "parameters": {
+                "url": "https://api.openai.com/v1/audio/transcriptions",
+                "method": "POST",
+                "authentication": "headerAuth",
+                "sendBody": true,
+                "contentType": "multipart-form-data",
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "model",
+                            "value": "whisper-1"
+                        },
+                        {
+                            "name": "file",
+                            "parameterType": "formBinaryData",
+                            "value": "data"
+                        },
+                        {
+                            "name": "response_format",
+                            "value": "verbose_json"
+                        },
+                        {
+                            "name": "timestamp_granularities[]",
+                            "value": "word"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                360,
+                -1340
+            ],
+            "id": "whisper_transcribe",
+            "name": "Whisper Transcribe (Word-Level)"
+        },
+        {
+            "parameters": {
+                "jsCode": "// === Generate ASS Subtitles ===\n// Converts Whisper word-level timestamps to ASS format with animation tags\n\nconst whisperData = $input.first().json;\nconst words = whisperData.words;\n\nlet assContent = `[Script Info]\nTitle: Shorts Subtitles\nScriptType: v4.00+\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,2,10,10,10,1\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n`;\n\nwords.forEach(word => {\n  const start = new Date(word.start * 1000).toISOString().substr(11, 10);\n  const end = new Date(word.end * 1000).toISOString().substr(11, 10);\n  // Add 'Karaoke' effect or simple highlight\n  assContent += `Dialogue: 0,${start},${end},Default,,0,0,0,,{\\\\1c&H00FFFF&}${word.word}{\\\\1c&HFFFFFF&}\\n`;\n});\n\nreturn [{ json: { assContent } }];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                560,
+                -1340
+            ],
+            "id": "generate_ass",
+            "name": "Generate ASS Subtitles"
+        },
+        {
+            "parameters": {
+                "command": "ffmpeg -y -i output.mp4 -vf \"ass=subtitles.ass\" final_output.mp4"
+            },
+            "type": "n8n-nodes-base.executeCommand",
+            "typeVersion": 1,
+            "position": [
+                760,
+                -1340
+            ],
+            "id": "burn_subtitles",
+            "name": "Burn Subtitles"
+        },
+        {
+            "parameters": {
+                "content": "# 6. Metadata & Approval",
+                "height": 340,
+                "width": 640,
+                "color": 1
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                960,
+                -1400
+            ],
+            "id": "note_approval",
+            "name": "Note: Approval"
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "Generate YouTube Shorts Title, Description, and Tags for this video.\nTopic: {{ $json.topic }}\nScript: {{ $json.narration }}\n\nOutput JSON:\n{\n  \"title\": \"...\",\n  \"description\": \"...\",\n  \"tags\": [\"...\"]\n}",
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 2,
+            "position": [
+                1020,
+                -1340
+            ],
+            "id": "agent_metadata",
+            "name": "Generate Metadata"
+        },
+        {
+            "parameters": {
+                "model": {
+                    "__rl": true,
+                    "value": "gpt-5-mini",
+                    "mode": "list",
+                    "cachedResultName": "gpt-5-mini"
+                },
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+            "typeVersion": 1,
+            "position": [
+                1020,
+                -1160
+            ],
+            "id": "openai_metadata",
+            "name": "OpenAI Metadata"
+        },
+        {
+            "parameters": {},
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.1,
+            "position": [
+                1260,
+                -1340
+            ],
+            "id": "wait_approval",
+            "name": "Wait for Approval"
+        },
+        {
+            "parameters": {
+                "resource": "video",
+                "operation": "upload",
+                "title": "={{ $json.title }}",
+                "description": "={{ $json.description }}",
+                "privacyStatus": "private",
+                "categoryId": "27"
+            },
+            "type": "n8n-nodes-base.youTube",
+            "typeVersion": 1,
+            "position": [
+                1460,
+                -1340
+            ],
+            "id": "youtube_upload",
+            "name": "YouTube Upload"
+        },
+        {
+            "parameters": {
+                "operation": "update",
+                "documentId": {
+                    "__rl": true,
+                    "value": "1AyIUgp55Rr88R5KMGvkBfMLCucWXsT0_AjhaLhV-_J8",
+                    "mode": "list",
+                    "cachedResultName": "AI news"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "gid=0",
+                    "mode": "list",
+                    "cachedResultName": "Sheet1"
+                },
+                "columns": {
+                    "mappingMode": "defineBelow",
+                    "value": {
+                        "video_url": "={{ $json.url }}",
+                        "status": "Uploaded"
+                    },
+                    "matchingColumns": [
+                        "narration"
+                    ],
+                    "schema": [
+                        {
+                            "id": "narration",
+                            "displayName": "narration",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "video_url",
+                            "displayName": "video_url",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "status",
+                            "displayName": "status",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.5,
+            "position": [
+                1660,
+                -1340
+            ],
+            "id": "log_final",
+            "name": "Log Final Status"
+        }
+    ],
+    "connections": {
+        "Daily Trend Scan": {
+            "main": [
+                [
+                    {
+                        "node": "Get Trending Topic",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Trending Topic": {
+            "main": [
+                [
+                    {
+                        "node": "Generate Script & Prompts",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI Chat Model (Mini)": {
+            "ai_language_model": [
+                [
+                    {
+                        "node": "Generate Script & Prompts",
+                        "type": "ai_language_model",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Generate Script & Prompts": {
+            "main": [
+                [
+                    {
+                        "node": "Log Script to Sheet",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Log Script to Sheet": {
+            "main": [
+                [
+                    {
+                        "node": "Split Scenes",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Scenes": {
+            "main": [
+                [
+                    {
+                        "node": "Flux Ultra Generate",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Flux Ultra Generate": {
+            "main": [
+                [
+                    {
+                        "node": "Gemini 2.5 Vision Check",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Backup to Drive",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Gemini 2.5 Vision Check": {
+            "main": [
+                [
+                    {
+                        "node": "Is Safe?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Is Safe?": {
+            "main": [
+                [
+                    {
+                        "node": "Generate FFmpeg Script",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Generate FFmpeg Script": {
+            "main": [
+                [
+                    {
+                        "node": "Execute FFmpeg",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Execute FFmpeg": {
+            "main": [
+                [
+                    {
+                        "node": "Whisper Transcribe (Word-Level)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Whisper Transcribe (Word-Level)": {
+            "main": [
+                [
+                    {
+                        "node": "Generate ASS Subtitles",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Generate ASS Subtitles": {
+            "main": [
+                [
+                    {
+                        "node": "Burn Subtitles",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Burn Subtitles": {
+            "main": [
+                [
+                    {
+                        "node": "Generate Metadata",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI Metadata": {
+            "ai_language_model": [
+                [
+                    {
+                        "node": "Generate Metadata",
+                        "type": "ai_language_model",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Generate Metadata": {
+            "main": [
+                [
+                    {
+                        "node": "Wait for Approval",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait for Approval": {
+            "main": [
+                [
+                    {
+                        "node": "YouTube Upload",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "YouTube Upload": {
+            "main": [
+                [
+                    {
+                        "node": "Log Final Status",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

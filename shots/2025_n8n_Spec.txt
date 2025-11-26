@@ -1,0 +1,93 @@
+# SYSTEM CONTEXT: N8N v1.117.2 (NOVEMBER 2025)
+# SOURCE OF TRUTH: Finalized Gaseongbi Strategy (Gemini 3.0 Pro + SORA-2)
+
+### 1. 글로벌 규칙 (GLOBAL RULES)
+- **노드 버전**: 모든 노드는 최신(Action-Based) 버전을 사용합니다.
+- **AI 모델 원칙 (가성비 최적화)**:
+  - **Logic/Script (Main)**: `gemini-3.0-pro` (Claude Opus급 성능, 저렴한 비용)
+  - **Economy Mode (A/B Test)**: `gemini-3.0-flash` (초저비용 테스트용)
+  - **Visual Director**: `gpt-5.1` (프롬프트 엔지니어링)
+  - **Video Gen**: `sora-2` (타협 없는 퀄리티)
+  - **Image Gen**: `dall-e-3`
+
+---
+
+### 2. 핵심 노드 구조 (CORE NODE STRUCTURES)
+
+#### [A] 유튜브 모니터링 (HTTP Request)
+*Search API 대신 PlaylistItems 사용*
+```json
+{
+  "type": "n8n-nodes-base.httpRequest",
+  "parameters": {
+    "url": "https://www.googleapis.com/youtube/v3/playlistItems",
+    "options": { "qs": { "part": "snippet", "maxResults": 10 } }
+  }
+}
+```
+
+#### [B] Gemini 3.0 Pro (Main Intelligence)
+*모든 기획, 대본, 분석의 핵심 엔진*
+```json
+{
+  "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+  "parameters": {
+    "modelName": "models/gemini-3.0-pro",
+    "options": { "temperature": 0.7 }
+  }
+}
+```
+
+#### [C] Gemini 3.0 Flash (Economy/Vision)
+*A/B 테스트의 'A'군(무료/저가) 및 비전 분석용*
+```json
+{
+  "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+  "parameters": {
+    "modelName": "models/gemini-3.0-flash"
+  }
+}
+```
+
+#### [D] SORA-2 (Video Generation)
+*Tool Workflow로 구현*
+```json
+{
+  "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+  "parameters": {
+    "workflowId": "sora_video_gen_workflow_id"
+  }
+}
+```
+
+### 3. 필수 로직 노드 (LOGIC PATTERNS)
+
+#### [E] A/B Split (Switch Node)
+*무료(Flash) vs 유료(Pro) 성과 비교*
+```json
+{
+  "type": "n8n-nodes-base.switch",
+  "parameters": {
+    "rules": {
+      "values": [
+        { "value1": "={{ Math.random() < 0.5 ? 'A' : 'B' }}" }
+      ]
+    }
+  }
+}
+```
+
+### 4. 프롬프트 전략 (PROMPT STRATEGIES)
+
+**[P1] 진실 추적자 (Truth Hunter)**
+- **Model**: Gemini 3.0 Pro
+- **Role**: 탐사 보도 전문 기자
+- **Goal**: "병원/언론이 숨기는 진실" 프레임으로 각색
+
+**[P2] 도파민 그래프 설계자**
+- **Model**: Gemini 3.0 Pro
+- **Role**: 신경마케팅 전문가
+- **Technique**: 4-Peak Dopamine Graph (0:08, 1:45, 4:30, 5:40)
+
+---
+**NOTE**: 이 파일은 최종 합의된 스펙입니다. 이 외의 모델(Claude, DeepSeek 등)은 사용하지 않습니다.

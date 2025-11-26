@@ -1,0 +1,176 @@
+{
+    "name": "Shorts_NextLevel_v7_Ultimate",
+    "nodes": [
+        {
+            "parameters": {
+                "content": "# v7 Ultimate - 2025-11 최신 버전\n\n## 특징\n- Gemini 2.5 Flash (무료)\n- Flux 1.1 Pro Ultra\n- Kling v2 Pro (선택적)\n- 완전한 에러 처리\n- Retry 로직\n- 테스트 모드 지원",
+                "height": 400,
+                "width": 500,
+                "color": 7
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -2000,
+                -1500
+            ],
+            "id": "note_header",
+            "name": "Note: v7 Info"
+        },
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "hours",
+                            "triggerAtHour": 6
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                -1800,
+                -1200
+            ],
+            "id": "trigger_daily",
+            "name": "Daily 6AM Trigger"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "config_kling",
+                            "name": "kling_enabled",
+                            "value": false,
+                            "type": "boolean"
+                        },
+                        {
+                            "id": "config_scenes",
+                            "name": "kling_scenes",
+                            "value": [
+                                2,
+                                4
+                            ],
+                            "type": "array"
+                        },
+                        {
+                            "id": "config_test",
+                            "name": "test_mode",
+                            "value": true,
+                            "type": "boolean"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                -1600,
+                -1200
+            ],
+            "id": "config",
+            "name": "Workflow Config"
+        },
+        {
+            "parameters": {
+                "jsCode": "// 단일 주제 반환 (테스트 모드)\nconst testMode = $('Workflow Config').item.json.test_mode;\n\nif (testMode) {\n  return [{\n    json: {\n      topic: \"커피에 설탕 넣으면 혈관이...\",\n      trend_source: \"테스트\",\n      priority: \"high\"\n    }\n  }];\n}\n\n// 프로덕션: 실제 Trend API 호출 (추후 구현)\nreturn [{\n  json: {\n    topic: \"걷기 운동 10,000보의 진실\",\n    trend_source: \"YouTube Trending\",\n    priority: \"high\"\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -1400,
+                -1200
+            ],
+            "id": "get_topic",
+            "name": "Get Topic"
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "=Topic: {{ $json.topic }}\n\nYou are creating a 30-second Korean YouTube Shorts script for seniors (60-80세).\nYour goal: educate + shock + inspire action using the \"Heaven vs Hell\" contrast.\n\n# CRITICAL OUTPUT RULES (MUST FOLLOW)\n1. Output ONLY valid JSON - no markdown, no explanations\n2. If uncertain or missing data, use placeholders but KEEP valid JSON structure\n3. Character limits are STRICT - exceeding them breaks downstream processing\n\n# SCRIPT STRUCTURE (SUPREME INDIANS pattern adapted)\n\n## 1. Hook (2초, 15-20자)\n- Start with: \"잠깐!\" or \"이거 아세요?\" or \"믿기 힘들지만\"\n- Include ONE shocking number or fact\n- Example: \"커피 한 잔에 설탕 3스푼? 혈관이 막힙니다\"\n\n## 2. Discovery Reveal (5초, 40-50자)\n- Explain WHAT happens (biological mechanism)\n- Use simple Korean, avoid medical jargon\n- Example: \"설탕이 혈액에 들어가면 혈관 벽에 염증을 일으켜요\"\n\n## 3. Modern Comparison (5초, 40-50자)\n- Show alternative (Heaven scenario)\n- Example: \"하지만 블랙커피는 항산화 성분이 혈관을 보호합니다\"\n\n## 4. Wait There's More (5초, 40-50자)\n- Add unexpected benefit or shocking truth\n- Example: \"더 놀라운 건, 하루 2잔만 마셔도 뇌졸중 위험 25% 감소\"\n\n## 5. Cultural Connection (5초, 40-50자)\n- Relate to Korean senior experience\n- Example: \"우리 어르신들이 즐기시던 다방커피, 사실 건강에 최악이었어요\"\n\n## 6. Call-to-Action (3초, 15-20자)\n- Action-oriented ending\n- Pick from: \"오늘부터 블랙커피 시작하세요\" / \"설탕 없는 커피가 답입니다\" / \"건강한 혈관은 선택입니다\"\n\n# IMAGE PROMPT RULES (Flux Ultra - Hyper-Realism)\n\nEach scene needs a VISUAL prompt for Flux Ultra generation.\n\n## Heaven Scenes (positive outcomes)\n- Style: \"first-person POV, hyper-realistic medical visualization\"\n- Lighting: \"soft blue glow, clean, sterile, hope\"\n- Subject: \"healthy blood vessels, clear arteries, vibrant red blood cells\"\n- Overlay: \"Medical HUD showing 'Heart Rate: 75 BPM', 'Blood Pressure: 120/80'\"\n- Camera: \"smooth forward tracking shot through artery, 9:16 aspect ratio\"\n\n## Hell Scenes (negative outcomes)\n- Style: \"endoscopic camera POV, clinical horror, hyper-realistic\"\n- Lighting: \"harsh red emergency lighting, warning signs\"\n- Subject: \"clogged arteries, plaque buildup, thick viscous blood\"\n- Overlay: \"Medical HUD showing 'WARNING: High Viscosity', 'Glucose: 180 mg/dL'\"\n- Camera: \"claustrophobic close-up, shaky emergency cam, 9:16 aspect ratio\"\n\n## UGC Realism Elements (avoid AI look)\n- Add: \"slight film grain, natural imperfections, handheld feel\"\n- Avoid: \"perfect CGI, overly polished, studio lighting\"\n\n# OUTPUT FORMAT (EXACT JSON)\n\n{\n  \"narration\": \"<COMPLETE script 200-250 characters, combines all 6 parts>\",\n  \"hook\": \"<15-20 characters exact>\",\n  \"cta\": \"<15-20 characters exact>\",\n  \"scenes\": [\n    {\n      \"id\": 1,\n      \"visual_type\": \"heaven\",\n      \"duration\": 5,\n      \"prompt\": \"<850-950 character Flux Ultra prompt, include ALL elements: style, lighting, subject, overlay, camera, UGC elements>\",\n      \"overlay_text\": \"Heart Rate: 75 BPM\"\n    },\n    {\n      \"id\": 2,\n      \"visual_type\": \"hell\",\n      \"duration\": 5,\n      \"prompt\": \"<850-950 character Flux Ultra prompt>\",\n      \"overlay_text\": \"WARNING: High Viscosity\"\n    },\n    {\n      \"id\": 3,\n      \"visual_type\": \"heaven\",\n      \"duration\": 5,\n      \"prompt\": \"<850-950 character Flux Ultra prompt>\",\n      \"overlay_text\": \"Oxidation: -40%\"\n    },\n    {\n      \"id\": 4,\n      \"visual_type\": \"hell\",\n      \"duration\": 5,\n      \"prompt\": \"<850-950 character Flux Ultra prompt>\",\n      \"overlay_text\": \"Plaque: +60%\"\n    },\n    {\n      \"id\": 5,\n      \"visual_type\": \"heaven\",\n      \"duration\": 5,\n      \"prompt\": \"<850-950 character Flux Ultra prompt>\",\n      \"overlay_text\": \"Stroke Risk: -25%\"\n    }\n  ],\n  \"power_words\": [\"충격\", \"혈관\", \"건강\", \"위험\"],\n  \"emotional_trigger\": \"fear\"\n}\n\n# QUALITY CHECKLIST (validate before output)\n- [ ] narration is 200-250 characters (Korean)\n- [ ] EXACTLY 5 scenes\n- [ ] Each prompt is 850-950 characters\n- [ ] Alternates heaven/hell or strategic mix\n- [ ] All overlay_text uses Medical HUD format\n- [ ] JSON is perfectly valid (test with JSON.parse)\n\nOUTPUT ONLY THE JSON, NO OTHER TEXT.",
+                "options": {
+                    "systemMessage": "You are an expert Korean health content scriptwriter specializing in senior-friendly YouTube Shorts.\n\nCRITICAL CAPABILITIES:\n1. Medical Knowledge: Translate complex health topics into simple Korean\n2. Emotional Intelligence: Use fear/hope balance to motivate without alarming\n3. Visual Storytelling: Create detailed image prompts for Flux Ultra AI\n4. Cultural Sensitivity: Respect Korean senior context and experience\n5. JSON Precision: ALWAYS output perfectly valid JSON\n\nTONE GUIDELINES:\n- Authoritative but warm (할머니께 설명하듯)\n- Urgent but not alarmist\n- Scientific but accessible\n- Hope-oriented endings\n\nFORBIDDEN:\n- Exaggerated medical claims\n- Overly technical jargon\n- Culturally insensitive content\n- Invalid JSON structure\n- Exceeding character limits\n\nYOUR SUCCESS METRICS:\n- Narration engagement (hook retention >80%)\n- Image prompt clarity (Flux success rate >90%)\n- JSON validity (100% parseable)\n- Senior comprehension (understood by 70+ age group)"
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 2,
+            "position": [
+                -1200,
+                -1200
+            ],
+            "id": "agent_script",
+            "name": "Generate Script"
+        },
+        {
+            "parameters": {
+                "modelName": "gemini-2.5-flash"
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                -1200,
+                -1020
+            ],
+            "id": "gemini_model",
+            "name": "Gemini 2.5 Flash"
+        }
+    ],
+    "connections": {
+        "Daily 6AM Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Workflow Config",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Workflow Config": {
+            "main": [
+                [
+                    {
+                        "node": "Get Topic",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Topic": {
+            "main": [
+                [
+                    {
+                        "node": "Generate Script",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Gemini 2.5 Flash": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "Generate Script",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "pinData": {},
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "staticData": null,
+    "tags": [],
+    "triggerCount": 0,
+    "updatedAt": "2025-11-24T03:27:00.000Z",
+    "versionId": "v7-ultimate-2025-11"
+}

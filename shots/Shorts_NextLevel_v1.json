@@ -1,0 +1,433 @@
+{
+    "name": "Shorts_NextLevel_v1_Verified",
+    "nodes": [
+        {
+            "parameters": {
+                "content": "# 1. Trend Arbitrage (Trend Hunter)",
+                "height": 240,
+                "width": 440,
+                "color": 4
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -1800,
+                -1400
+            ],
+            "id": "note_trend_hunter",
+            "name": "Note: Trend Hunter"
+        },
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "hours",
+                            "minutes": 0
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.1,
+            "position": [
+                -1740,
+                -1340
+            ],
+            "id": "trigger_schedule",
+            "name": "Daily Trend Scan"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Placeholder for Trend Arbitrage Logic\n// In a real scenario, this would call the 'Trend Hunter' sub-workflow\n// or fetch data from a Google Sheet populated by the Trend Hunter.\n\nreturn [{\n  json: {\n    topic: \"Mix Coffee & Vascular Health\",\n    trend_source: \"US YouTube (Dr. Berg)\",\n    velocity: \"High\",\n    keywords: [\"Mix Coffee\", \"Sugar\", \"Veins\"]\n  }\n}];"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -1540,
+                -1340
+            ],
+            "id": "mock_trend_data",
+            "name": "Get Trending Topic"
+        },
+        {
+            "parameters": {
+                "content": "# 2. Script & Prompts (AI Agent v2)",
+                "height": 340,
+                "width": 540,
+                "color": 5
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -1300,
+                -1400
+            ],
+            "id": "note_script",
+            "name": "Note: Script"
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "={{ $json.topic }}에 대한 30초 쇼츠 스크립트와 이미지 프롬프트를 작성하세요.\n\n# 스타일\n- 비주얼: Hyper-Realism (Flux Pro), POV (천국) vs Endoscopy (지옥)\n- 캐릭터: Medical HUD (Figma Overlay)\n\n# 출력 형식\nJSON으로 출력:\n{\n  \"narration\": \"...\",\n  \"scenes\": [\n    {\"id\": 1, \"visual_type\": \"heaven\", \"prompt\": \"...\"},\n    {\"id\": 2, \"visual_type\": \"hell\", \"prompt\": \"...\"}\n  ]\n}",
+                "options": {
+                    "systemMessage": "You are a creative director for senior health shorts."
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 2,
+            "position": [
+                -1240,
+                -1340
+            ],
+            "id": "agent_script",
+            "name": "Generate Script & Prompts"
+        },
+        {
+            "parameters": {
+                "model": {
+                    "__rl": true,
+                    "value": "gpt-4o",
+                    "mode": "list",
+                    "cachedResultName": "gpt-4o"
+                },
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+            "typeVersion": 1,
+            "position": [
+                -1240,
+                -1160
+            ],
+            "id": "openai_model",
+            "name": "OpenAI Chat Model"
+        },
+        {
+            "parameters": {
+                "content": "# 3. Visual Generation (Flux Pro + Gemini Vision)",
+                "height": 440,
+                "width": 840,
+                "color": 6
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -1000,
+                -1400
+            ],
+            "id": "note_visuals",
+            "name": "Note: Visuals"
+        },
+        {
+            "parameters": {
+                "fieldToSplitOut": "scenes",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.splitOut",
+            "typeVersion": 1,
+            "position": [
+                -940,
+                -1340
+            ],
+            "id": "split_scenes",
+            "name": "Split Scenes"
+        },
+        {
+            "parameters": {
+                "url": "https://api.flux.pro/v1/generate",
+                "method": "POST",
+                "authentication": "headerAuth",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "prompt",
+                            "value": "={{ $json.prompt }} --style hyper-realistic --aspect-ratio 9:16"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                -740,
+                -1340
+            ],
+            "id": "flux_generate",
+            "name": "Flux Pro Generate"
+        },
+        {
+            "parameters": {
+                "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent",
+                "method": "POST",
+                "authentication": "headerAuth",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\"text\": \"Rate this image 1-10 for 'Body Horror' or 'Gore'. If > 6, return 'UNSAFE'. If <= 6, return 'SAFE'.\"},\n        {\n          \"inline_data\": {\n            \"mime_type\": \"image/jpeg\",\n            \"data\": \"{{ $json.data }}\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                -540,
+                -1340
+            ],
+            "id": "gemini_safety",
+            "name": "Gemini Vision Check"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "string": [
+                        {
+                            "value1": "={{ $json.candidates[0].content.parts[0].text }}",
+                            "operation": "contains",
+                            "value2": "SAFE"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2,
+            "position": [
+                -340,
+                -1340
+            ],
+            "id": "check_safety",
+            "name": "Is Safe?"
+        },
+        {
+            "parameters": {
+                "content": "# 4. Graphics (Figma API)",
+                "height": 240,
+                "width": 440,
+                "color": 3
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -100,
+                -1400
+            ],
+            "id": "note_figma",
+            "name": "Note: Figma"
+        },
+        {
+            "parameters": {
+                "url": "https://api.figma.com/v1/images/FILE_KEY",
+                "method": "GET",
+                "authentication": "headerAuth",
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "ids",
+                            "value": "FRAME_ID"
+                        },
+                        {
+                            "name": "format",
+                            "value": "png"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                -40,
+                -1340
+            ],
+            "id": "figma_overlay",
+            "name": "Get Figma Overlay"
+        },
+        {
+            "parameters": {
+                "content": "# 5. Motion (Kling AI)",
+                "height": 240,
+                "width": 440,
+                "color": 2
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                200,
+                -1400
+            ],
+            "id": "note_kling",
+            "name": "Note: Kling AI"
+        },
+        {
+            "parameters": {
+                "url": "https://api.kling.ai/v1/video/generation",
+                "method": "POST",
+                "authentication": "headerAuth",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "image_url",
+                            "value": "={{ $json.flux_image_url }}"
+                        },
+                        {
+                            "name": "prompt",
+                            "value": "subtle motion, steam rising, breathing"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                260,
+                -1340
+            ],
+            "id": "kling_generate",
+            "name": "Kling AI Video"
+        },
+        {
+            "parameters": {
+                "content": "# 6. Upload (YouTube)",
+                "height": 240,
+                "width": 440,
+                "color": 1
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                500,
+                -1400
+            ],
+            "id": "note_upload",
+            "name": "Note: Upload"
+        },
+        {
+            "parameters": {
+                "resource": "video",
+                "operation": "upload",
+                "title": "={{ $json.title }}",
+                "description": "={{ $json.description }}",
+                "privacyStatus": "private"
+            },
+            "type": "n8n-nodes-base.youTube",
+            "typeVersion": 1,
+            "position": [
+                560,
+                -1340
+            ],
+            "id": "youtube_upload",
+            "name": "YouTube Upload"
+        }
+    ],
+    "connections": {
+        "Daily Trend Scan": {
+            "main": [
+                [
+                    {
+                        "node": "Get Trending Topic",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Trending Topic": {
+            "main": [
+                [
+                    {
+                        "node": "Generate Script & Prompts",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI Chat Model": {
+            "ai_language_model": [
+                [
+                    {
+                        "node": "Generate Script & Prompts",
+                        "type": "ai_language_model",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Generate Script & Prompts": {
+            "main": [
+                [
+                    {
+                        "node": "Split Scenes",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Scenes": {
+            "main": [
+                [
+                    {
+                        "node": "Flux Pro Generate",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Flux Pro Generate": {
+            "main": [
+                [
+                    {
+                        "node": "Gemini Vision Check",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Gemini Vision Check": {
+            "main": [
+                [
+                    {
+                        "node": "Is Safe?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Is Safe?": {
+            "main": [
+                [
+                    {
+                        "node": "Get Figma Overlay",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Figma Overlay": {
+            "main": [
+                [
+                    {
+                        "node": "Kling AI Video",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Kling AI Video": {
+            "main": [
+                [
+                    {
+                        "node": "YouTube Upload",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

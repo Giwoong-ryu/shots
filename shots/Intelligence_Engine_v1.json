@@ -1,0 +1,1772 @@
+{
+  "name": "Intelligence_Engine_v1",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# 정보수집\n## 스크립트 생성\n",
+        "height": 560,
+        "width": 1648
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4256,
+        672
+      ],
+      "typeVersion": 1,
+      "id": "fb6cb1ad-62fd-4963-b4b1-b9a04ebc53ef",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.parse($json.output).echo_script }}",
+        "options": {
+          "systemMessage": "### ROLE\nYou are a DALL-E 3 Prompt Specialist.\nYour goal is to generate a SINGLE, CONCISE image prompt based on the input visual description.\n\n### CRITICAL RULES\n1. **LENGTH LIMIT**: The prompt MUST be under 50 words. Keep it extremely short.\n2. **NO CHAT**: Do not include titles, explanations, or metadata.\n3. **STYLE**: Focus on \"8k hyper-realistic cinematic shot\".\n4. **JSON OUTPUT**: Output valid JSON only.\n\n### OUTPUT FORMAT\n{\n  \"image_prompt\": \"Hyper-realistic cinematic shot of [SUBJECT] in [ACTION], [LIGHTING], [MOOD], 8k resolution.\"\n}"
+        }
+      },
+      "id": "7d3b2079-c3f6-4c5c-9dcc-20421b7963a4",
+      "name": "Agent 3: Character Director1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        4144,
+        1344
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/generations",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "dall-e-3"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $json.output }}"
+            },
+            {
+              "name": "size",
+              "value": "1024x1024"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3cc43667-1a18-4a38-af64-725590700d6d",
+      "name": "API: DALL-E 3 (Generate)1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        4432,
+        1344
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "sJPPMgnhjsgphIV9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "search_topic",
+              "value": "latest health trends Korea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3884295b-8d5c-4319-abc3-9d766d6f3ac5",
+      "name": "Define Search Topic",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        4304,
+        864
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.search_topic }}"
+            },
+            {
+              "name": "engine",
+              "value": "google_trends"
+            },
+            {
+              "name": "api_key",
+              "value": "ea7da9194c2d43a3c221d17173ec3ed805e99ffd5b4f28e68acc15b3f842b170"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "20e72dda-690f-436b-8d25-f9a12f21fc91",
+      "name": "API: Google Trends",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        4512,
+        864
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.stringify($json) }}",
+        "options": {
+          "systemMessage": "### IDENTITY\nYou are the **Trend Scout** following Protocol Opal.\n\n### MISSION\nAnalyze the provided Google Trends data to find a \"Breakout\" topic for Korean Seniors.\n\n### ALGORITHM (The Breakout Filter)\n1. **Volume Check**: Ignore anything under 10k searches.\n2. **Growth Check**: Look for \"+500%\" (Breakout) or \"> +50%\" (Rising).\n3. **Relevance**: Must relate to \"Pain\", \"Fear\", or \"Immediate Relief\".\n\n### OUTPUT\nIdentify the #1 topic and its **Viral Angle** (e.g., \"Magnesium\" -> \"Night Leg Cramps\")."
+        }
+      },
+      "id": "b1981dd4-7681-48ee-bb7f-352c04c7a56a",
+      "name": "Agent 0: Trend Analyst",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        4704,
+        864
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-5-mini",
+        "options": {}
+      },
+      "id": "e494807c-bbfd-42b6-a9c3-5b725cca2c02",
+      "name": "GPT-4o-mini12",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        4288,
+        1840
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "sJPPMgnhjsgphIV9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ Math.random() < 0.5 ? 'A' : 'B' }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "A"
+            },
+            {
+              "value2": "B",
+              "output": 1
+            }
+          ]
+        }
+      },
+      "id": "c648d107-26ca-4443-a12d-a61d5f1223e4",
+      "name": "A/B Split",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        4992,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "### IDENTITY\nYou are the **Content Planner** following Protocol Opal.\n\n### MISSION\nStructure the video to maximize Dopamine Spikes (Retention).\n\n### STRUCTURE (The 4-Step Retention)\n1. **0-3s (Hell)**: Visual Shock + Audio Command (\"Stop eating this!\").\n2. **3-10s (Validation)**: Connect Hook to Symptom (\"If your hands are numb...\").\n3. **10-45s (Education)**: Explain Mechanism with Analogy (\"Like rusty pipes\").\n4. **45-60s (Heaven)**: The Solution (\"Eat 2 Walnuts\")."
+        }
+      },
+      "id": "5ecaf86f-aac1-4c1f-a4a7-bbe9c5f14235",
+      "name": "Agent 1-A: Planning",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        5184,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "### IDENTITY\nYou are the **Content Planner** following Protocol Opal.\n\n### MISSION\nStructure the video to maximize Dopamine Spikes (Retention).\n\n### STRUCTURE (The 4-Step Retention)\n1. **0-3s (Hell)**: Visual Shock + Audio Command (\"Stop eating this!\").\n2. **3-10s (Validation)**: Connect Hook to Symptom (\"If your hands are numb...\").\n3. **10-45s (Education)**: Explain Mechanism with Analogy (\"Like rusty pipes\").\n4. **45-60s (Heaven)**: The Solution (\"Eat 2 Walnuts\")."
+        }
+      },
+      "id": "319cf1fc-b07a-49f5-8aca-3935b1f0cd29",
+      "name": "Agent 1-B: Planning",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        5184,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "### IDENTITY\nYou are the **Script Architect**.\n\n### MISSION\nWrite the 60s script based on the Plan.\n\n### TACTICS\n1. **Short Sentences**: For TTS breathability.\n2. **J-Cut Markers**: Mark where audio should change *before* the visual.\n3. **Keywords**: Use \"Silent Killer\", \"Miracle\", \"Immediate\".\n4. **Language**: Natural Korean (Spoken style)."
+        }
+      },
+      "id": "88b959d2-c0e3-44e7-8b61-2954e87718c2",
+      "name": "Agent 2-A: Script",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        5456,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "### IDENTITY\nYou are the **Script Architect**.\n\n### MISSION\nWrite the 60s script based on the Plan.\n\n### TACTICS\n1. **Short Sentences**: For TTS breathability.\n2. **J-Cut Markers**: Mark where audio should change *before* the visual.\n3. **Keywords**: Use \"Silent Killer\", \"Miracle\", \"Immediate\".\n4. **Language**: Natural Korean (Spoken style)."
+        }
+      },
+      "id": "cd9b95e8-a382-4ef4-ada4-dbd5e3e283c9",
+      "name": "Agent 2-B: Script",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        5456,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.data[0].revised_prompt }}",
+        "options": {
+          "systemMessage": "### ROLE\nYou are a minimalist DALL-E 3 Prompt Generator.\n\n### ABSOLUTE RULES\n1. **MAX 50 WORDS:** Write ONLY the visual description for a single static image. Keep it extremely short.\n2. **NO VIDEO TERMS:** Do not use \"cinemagraph\", \"motion\", \"physics\", or \"shot list\".\n3. **JSON ONLY:** Output valid JSON.\n\n### OUTPUT FORMAT\n{\n  \"image_prompt\": \"Cinematic wide shot of an elderly woman falling in a living room, motion blur, dramatic lighting, 8k resolution.\"\n}"
+        }
+      },
+      "id": "88b9ca3f-a39d-4f95-a866-7a886be23a6e",
+      "name": "Agent 4: Video Director",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        4592,
+        1344
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/generations",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "dall-e-3"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ 'Cinematic wide shot, motion blur, 4k video frame: ' + $json.output }}"
+            },
+            {
+              "name": "size",
+              "value": "1024x1024"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ae298087-97f2-4095-aef0-94c122a92dc9",
+      "name": "API: SORA-2 (Simulated Frame)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        4896,
+        1344
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "sJPPMgnhjsgphIV9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/audio/speech",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "tts-1"
+            },
+            {
+              "name": "input",
+              "value": "={{ $json.output }}"
+            },
+            {
+              "name": "voice",
+              "value": "alloy"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "dd4ef567-5561-4e33-be87-eca439aabd03",
+      "name": "API: OpenAI TTS (Audio)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        4896,
+        1552
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "sJPPMgnhjsgphIV9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "e23202c7-9193-432c-8a8d-9454d8a1ce42",
+      "name": "Merge Streams1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        5136,
+        1520
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "id": "f615cfc7-928a-4fb1-84c2-3baf70b61f26",
+      "name": "Download Video1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        5840,
+        1712
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Consolidate Script').item.json.final_script }}",
+        "options": {
+          "systemMessage": "### AGENT: TTS SCRIPT WRITER\n**Mission**: You are a Voiceover Artist. \n**Task**: Summarize the provided text into a concise, engaging 30-second script for a YouTube Short.\n**Constraint**: Output MUST be plain text under 500 characters. No markdown, no emojis."
+        }
+      },
+      "id": "5bba81db-2712-4196-a6db-f8c92cd80482",
+      "name": "Agent: TTS Script Writer1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        4592,
+        1552
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-5-mini",
+        "options": {}
+      },
+      "id": "b1af7e36-79f7-4d11-9f7d-e1e40c71c405",
+      "name": "GPT-4o-mini1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        4992,
+        1104
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "sJPPMgnhjsgphIV9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "unit": "minutes"
+      },
+      "id": "b28e7f9d-cab1-401d-8ef7-e7ada01393e3",
+      "name": "Wait for Render1",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        5680,
+        1712
+      ],
+      "webhookId": "d8276f5c-3dca-4511-9b33-df693ceabcd2"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $json.title }}",
+        "regionCode": "KR",
+        "categoryId": "27",
+        "options": {
+          "notifySubscribers": false,
+          "privacyStatus": "private",
+          "selfDeclaredMadeForKids": false
+        }
+      },
+      "id": "199ae0ea-2531-494f-a0be-523aede671f5",
+      "name": "YouTube Upload (Final)1",
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        6160,
+        1888
+      ],
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "oLZPXMvaa8mS5fz0",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Consolidate Script').item.json.final_script }}",
+        "options": {
+          "systemMessage": "### IDENTITY\nYou are the **Thumbnail Engineer**.\n\n### LAYOUT (F-Pattern)\n1. **LEFT (40%)**: Character Face (Extreme Emotion: Shock/Fear).\n2. **RIGHT (60%)**: Text Area (High Contrast).\n\n### TEXT RULE\n**MAX 3 WORDS**. (e.g., \"이것 먹으면?\", \"30일 후\")."
+        }
+      },
+      "id": "81394fd7-5b90-4f23-a830-d752e3ce3d6e",
+      "name": "Agent 7: Thumbnail Director",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        5680,
+        1344
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/generations",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "dall-e-3"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $json.output }}"
+            },
+            {
+              "name": "size",
+              "value": "1024x1024"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "555bc8ab-6c9a-499d-a718-6d955d8008d3",
+      "name": "API: DALL-E 3 (Generate Thumb)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        5152,
+        1904
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "sJPPMgnhjsgphIV9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "title",
+              "value": "={{ $('Agent 5: Title').item.json.output }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ $('Agent 6: Description').item.json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e273a4b3-e560-4e78-b2cf-182b81aebd33",
+      "name": "Set Metadata",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        5664,
+        1904
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "f937cfe1-bc04-43d0-a4ab-cf3c8bdef6df",
+      "name": "Final Merge (Video + Data)",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        5984,
+        1888
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Consolidate Script').item.json.final_script }}",
+        "options": {
+          "systemMessage": "### IDENTITY\nYou are the **SEO Specialist**.\n\n### MISSION\nWrite the YouTube Description.\n\n### STRUCTURE\n1. **Hook**: Restate the warning.\n2. **Summary**: Brief explanation.\n3. **Hashtags**: #SeniorHealth #HealthTips #[Topic]"
+        }
+      },
+      "id": "643941da-330d-4e60-bc01-a8424762cbc7",
+      "name": "Agent 6: Description",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        5392,
+        1344
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.stringify({ script: $('Consolidate Script').item.json.final_script, title: $('Agent 5: Title').item.json.output, description: $('Agent 6: Description').item.json.output }) }}",
+        "options": {
+          "systemMessage": "### IDENTITY\nYou are the **Quality Assurance Bot**.\n\n### MISSION\nReview Script, Title, and Description for consistency.\nEnsure the \"Warning\" matches the \"Solution\"."
+        }
+      },
+      "id": "a870c478-f31f-4c9e-8373-d7ed0dde8613",
+      "name": "Agent 8: Analysis",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        5360,
+        1904
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Consolidate Script').item.json.final_script }}",
+        "options": {
+          "systemMessage": "### AGENT: VIDEO CAPTION\n**Mission**: Summarize the script into ONE short, punchy sentence for the video overlay.\n**Language**: KOREAN (Must be written in Korean).\n**Constraint**: STRICTLY under 50 characters. This text will appear ON the video, so keep it clean and readable."
+        }
+      },
+      "id": "07d46be6-cd64-4a27-a589-74ea8826d0ad",
+      "name": "Agent: Video Caption1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        5424,
+        1520
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "51f92e53-ca7e-4f29-a759-4957b001c1e7",
+      "name": "Merge: Text Content1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        5168,
+        1728
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "610232cf-5d34-45a2-a134-2a4830762561",
+      "name": "Merge: Final Inject1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        5360,
+        1712
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.creatomate.com/v1/renders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "template_id",
+              "value": "84c9e6fa-d6ee-4f29-95d4-f5d7668e1bde"
+            },
+            {
+              "name": "modifications",
+              "value": "={{ { \"Video\": $('Merge Streams1').item.json.data[0].url, \"Text-1\": $('Merge: Text Content1').item.json.title, \"Text-2\": $('Merge: Text Content1').item.json.caption } }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "dd8ac8b3-99e1-47b6-a6c4-bafb07dbef55",
+      "name": "API: Creatomate (Refined)1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        5520,
+        1712
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "ww18iTXItBY6LHIv",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    title: $('Agent 5: Title').item.json.output,\n    caption: $('Agent: Video Caption1').item.json.output\n  }\n}];"
+      },
+      "id": "31252db6-3a95-4345-8f02-e00b7fcf8363",
+      "name": "Code: Merge Helper1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5760,
+        1520
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Consolidate Script').item.json.final_script }}",
+        "options": {
+          "systemMessage": "### IDENTITY\nYou are the **Metadata Specialist**.\n\n### FORMULA\n`[Shocking Warning]` + `[Specific Symptom]` + `[Simple Solution]`\n\n### RULES\n1. Under 20 chars.\n2. NO Emojis.\n3. Example: \"절대 먹지 마세요 (다리 쥐날 때)\""
+        }
+      },
+      "id": "ad0202be-27ef-4ebf-85b0-31783faa61f8",
+      "name": "Agent 5: Title",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        5104,
+        1344
+      ]
+    },
+    {
+      "parameters": {
+        "height": 528,
+        "width": 944,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4096,
+        1264
+      ],
+      "typeVersion": 1,
+      "id": "305bf5c9-cf36-4af6-848f-3ea05e32001d",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "height": 848,
+        "width": 1232,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5072,
+        1264
+      ],
+      "typeVersion": 1,
+      "id": "a30860db-3f2f-4ede-8b0d-bb65da6154c0",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "retry_count"
+            }
+          ],
+          "string": [
+            {
+              "name": "final_script",
+              "value": "={{ $json.final_script }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2035dda4-d89f-4fe1-9bbd-87b885fb65e7",
+      "name": "Init Loop (안전장치)1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        5968,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.final_script }}",
+        "options": {
+          "systemMessage": "### IDENTITY\nYou are the **Chief Critic**.\n\n### SCORING (Pass = 85+)\n1. **Finger Count**: -20 pts if >5.\n2. **Physics**: -15 pts if floating objects.\n3. **Uncanny Valley**: -10 pts if dead eyes.\n\n### OUTPUT FORMAT (JSON REQUIRED)\nYou **MUST** output the result in valid **JSON** format.\n{\n  \"status\": \"PASS\" or \"FAIL\",\n  \"reason\": \"Specific feedback based on scoring\",\n  \"echo_script\": \"Return the original input script exactly as received here\"\n}"
+        }
+      },
+      "id": "f1e5899d-01ee-4248-9adc-20ced435ccea",
+      "name": "Agent: Chief Editor1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        6128,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ JSON.parse($json.output).status }}",
+              "value2": "PASS"
+            }
+          ]
+        }
+      },
+      "id": "9c00fdc9-11e6-44c3-b324-a7331725bdbe",
+      "name": "IF: Passed?1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        5968,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.retry_count }}",
+              "value2": 3
+            }
+          ]
+        }
+      },
+      "id": "ffb3c707-80d8-4d56-9954-72fbdf6d3bf9",
+      "name": "IF: Retry Limit < ",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        6144,
+        1056
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Original Script:\n{{ $json.final_script }}\n\nFeedback:\n{{ JSON.parse($json.output).reason }}\n\n위 피드백을 반영하여 대본을 수정해.",
+        "options": {
+          "systemMessage": "### ROLE: SCRIPT DOCTOR\n당신은 대본 수정 전문가입니다. 편집장의 피드백을 100% 반영하여 대본을 고쳐쓰세요.\n\n### OUTPUT FORMAT (JSON REQUIRED)\nYou **MUST** output the result in valid **JSON** format.\n{\n  \"final_script\": \"여기에 수정된 대본 전체를 텍스트로 넣으세요.\"\n}"
+        }
+      },
+      "id": "2bba1765-f48d-4b27-86ab-8deb2c74916d",
+      "name": "Agent: Reviser (수정)1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        6336,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "retry_count",
+              "value": "={{ $json.retry_count + 1 }}"
+            }
+          ],
+          "string": [
+            {
+              "name": "final_script",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "96f8fd8a-4508-44b8-918c-e5815054272f",
+      "name": "Update & Loop Back1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        6608,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-5-mini",
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "id": "fe255033-a19a-4df9-bf2b-d3d9f02366b4",
+      "name": "GPT-4o Mini (Editor)1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        6128,
+        960
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "sJPPMgnhjsgphIV9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "final_script",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "142961c4-8ab3-4a90-b74b-9bf129aaa122",
+      "name": "Consolidate Script",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        5776,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6183184950",
+        "text": "[비상 알림] 대본 수정 실패. 작업 중단!!",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        6592,
+        832
+      ],
+      "id": "5fb2daee-982c-48e9-8f31-4d2a28e14251",
+      "name": "Send a text message1",
+      "webhookId": "d7191936-1c63-464a-ab6e-d1c2aaa050b0",
+      "credentials": {
+        "telegramApi": {
+          "id": "V1NNozHTbfnRm2c1",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# 검증 단계\n",
+        "height": 560,
+        "width": 864,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5920,
+        672
+      ],
+      "typeVersion": 1,
+      "id": "dcb011d8-e5cb-4979-b24e-9581e8d233d4",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {},
+      "id": "5284c814-eb95-494b-b2dc-931cdffc3370",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        3184,
+        1056
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "5ecfe8d0-4c73-416a-8a40-e7901930f6a3",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        3184,
+        896
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🧠 지능 엔진 (The Brain)\n## 임무: Agent 0에게 실시간 데이터 공급\n\n1. **Reddit Scraper (RSS)**: r/Biohackers의 주간 인기글을 RSS로 가져옵니다. (가장 안정적)\n2. **YouTube Scraper (HTTP)**: 경쟁사의 최신 바이럴 영상을 가져옵니다.\n3. **Data Merger**: 모든 데이터를 하나의 \"트렌드 리포트\"로 통합합니다.",
+        "height": 565,
+        "width": 1093,
+        "color": 6
+      },
+      "id": "879edeb4-4223-484a-a5d9-7233992dd238",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3136,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "youTubeOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "part",
+              "value": "snippet"
+            },
+            {
+              "name": "q",
+              "value": "senior health tips"
+            },
+            {
+              "name": "type",
+              "value": "video"
+            },
+            {
+              "name": "maxResults",
+              "value": "10"
+            },
+            {
+              "name": "order",
+              "value": "date"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3e68fd2e-2b8a-4816-bc49-f2e9dcf2e8cb",
+      "name": "YouTube Scraper (Competitors)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        3424,
+        1056
+      ],
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "oLZPXMvaa8mS5fz0",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge Reddit Data (From RSS)\n// RSS structure: item.json.title, item.json.link\nconst redditData = items.map(item => `[REDDIT] ${item.json.title} (Link: ${item.json.link})`).join('\\n');\nreturn [{ json: { reddit_report: redditData } }];"
+      },
+      "id": "19ac080a-eb26-4b4a-9d79-3cc02e2d86b3",
+      "name": "Format Reddit",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3648,
+        896
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge YouTube Data (From HTTP Request)\n// HTTP Request returns 1 item with nested 'items' array\nconst videos = items[0].json.items;\n\nif (!videos || videos.length === 0) {\n  return [{ json: { youtube_report: \"No videos found.\" } }];\n}\n\nconst youtubeData = videos.map(video => {\n  const title = video.snippet.title;\n  const channel = video.snippet.channelTitle;\n  return `[YOUTUBE] ${title} (Channel: ${channel})`;\n}).join('\\n');\n\nreturn [{ json: { youtube_report: youtubeData } }];"
+      },
+      "id": "47c45b91-c739-41de-8bf5-8fe2344945b0",
+      "name": "Format YouTube",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3648,
+        1056
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "966b6ed3-b5b5-42f6-b90e-485783328851",
+      "name": "Merge Data",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        3872,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const reddit = $('Format Reddit').item.json.reddit_report;\nconst youtube = $('Format YouTube').item.json.youtube_report;\n\nconst finalReport = `### INTELLIGENCE REPORT (WEEKLY)\\n\\n#### REDDIT SIGNALS (Biohacking/Longevity)\\n${reddit}\\n\\n#### YOUTUBE SIGNALS (Competitors)\\n${youtube}`;\n\nreturn [{ json: { trend_report: finalReport } }];"
+      },
+      "id": "a44e2e99-8b04-47e0-95f9-230700710fd9",
+      "name": "Generate Final Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4064,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.reddit.com/r/Biohackers/top.rss?t=week",
+        "options": {}
+      },
+      "id": "035a003d-6a7e-4615-a602-92612790601d",
+      "name": "Reddit Scraper (RSS)1",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        3424,
+        896
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-5-mini",
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "id": "8ccbd6e4-9b7d-45d8-8a72-79420f7067e6",
+      "name": "GPT-4o Mini (Editor)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        6336,
+        1184
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "sJPPMgnhjsgphIV9",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Agent: TTS Script Writer1": [
+      {
+        "json": {
+          "output": "빠른 방법 알려드립니다. 구글 트렌즈—지역 한국, 기간 지난 12개월 + 90일, 유튜브 검색 병행. 카테고리 헬스, 제가 보낸 6개 키워드 붙여넣기. Related queries(rising, breakout), 지역별 관심도, CSV 타임시리즈 수집. 월간 검색량 ≥10K와 증가율 확인하면 바로 테스트 가능. 네이버 키워드 툴도 병행 권장. 진행 선택: A) 트렌즈+유튜브 B) 월간만 C) 둘 다. \"Immediate\"로 시작하세요."
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Agent 3: Character Director1": {
+      "main": [
+        [
+          {
+            "node": "API: DALL-E 3 (Generate)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API: DALL-E 3 (Generate)1": {
+      "main": [
+        [
+          {
+            "node": "Agent 4: Video Director",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Define Search Topic": {
+      "main": [
+        [
+          {
+            "node": "API: Google Trends",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API: Google Trends": {
+      "main": [
+        [
+          {
+            "node": "Agent 0: Trend Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 0: Trend Analyst": {
+      "main": [
+        [
+          {
+            "node": "A/B Split",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o-mini12": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent 3: Character Director1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Agent: TTS Script Writer1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Agent 6: Description",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Agent 7: Thumbnail Director",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Agent 8: Analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Agent: Video Caption1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Agent 5: Title",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Agent 4: Video Director",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A/B Split": {
+      "main": [
+        [
+          {
+            "node": "Agent 1-A: Planning",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Agent 1-B: Planning",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 1-A: Planning": {
+      "main": [
+        [
+          {
+            "node": "Agent 2-A: Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 1-B: Planning": {
+      "main": [
+        [
+          {
+            "node": "Agent 2-B: Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 2-A: Script": {
+      "main": [
+        [
+          {
+            "node": "Consolidate Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 2-B: Script": {
+      "main": [
+        [
+          {
+            "node": "Consolidate Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 4: Video Director": {
+      "main": [
+        [
+          {
+            "node": "API: SORA-2 (Simulated Frame)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API: SORA-2 (Simulated Frame)": {
+      "main": [
+        [
+          {
+            "node": "Merge Streams1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API: OpenAI TTS (Audio)": {
+      "main": [
+        [
+          {
+            "node": "Merge Streams1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Streams1": {
+      "main": [
+        [
+          {
+            "node": "Merge: Final Inject1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Video1": {
+      "main": [
+        [
+          {
+            "node": "Final Merge (Video + Data)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent: TTS Script Writer1": {
+      "main": [
+        [
+          {
+            "node": "API: OpenAI TTS (Audio)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o-mini1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent 0: Trend Analyst",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Agent 1-A: Planning",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Agent 2-A: Script",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Agent 1-B: Planning",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Agent 2-B: Script",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Render1": {
+      "main": [
+        [
+          {
+            "node": "Download Video1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 7: Thumbnail Director": {
+      "main": [
+        [
+          {
+            "node": "API: DALL-E 3 (Generate Thumb)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API: DALL-E 3 (Generate Thumb)": {
+      "main": [
+        [
+          {
+            "node": "Agent 8: Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Metadata": {
+      "main": [
+        [
+          {
+            "node": "Final Merge (Video + Data)",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Final Merge (Video + Data)": {
+      "main": [
+        [
+          {
+            "node": "YouTube Upload (Final)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 6: Description": {
+      "main": [
+        [
+          {
+            "node": "Agent 7: Thumbnail Director",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 8: Analysis": {
+      "main": [
+        [
+          {
+            "node": "Set Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent: Video Caption1": {
+      "main": [
+        [
+          {
+            "node": "Code: Merge Helper1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge: Text Content1": {
+      "main": [
+        [
+          {
+            "node": "Merge: Final Inject1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge: Final Inject1": {
+      "main": [
+        [
+          {
+            "node": "API: Creatomate (Refined)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API: Creatomate (Refined)1": {
+      "main": [
+        [
+          {
+            "node": "Wait for Render1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Merge Helper1": {
+      "main": [
+        [
+          {
+            "node": "Merge: Text Content1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 5: Title": {
+      "main": [
+        [
+          {
+            "node": "Agent 6: Description",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent: Video Caption1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Loop (안전장치)1": {
+      "main": [
+        [
+          {
+            "node": "Agent: Chief Editor1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent: Chief Editor1": {
+      "main": [
+        [
+          {
+            "node": "IF: Passed?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Passed?1": {
+      "main": [
+        [
+          {
+            "node": "Agent 5: Title",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent: TTS Script Writer1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 3: Character Director1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Retry Limit < ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Retry Limit < ": {
+      "main": [
+        [
+          {
+            "node": "Agent: Reviser (수정)1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent: Reviser (수정)1": {
+      "main": [
+        [
+          {
+            "node": "Update & Loop Back1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update & Loop Back1": {
+      "main": [
+        [
+          {
+            "node": "Agent: Chief Editor1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o Mini (Editor)1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent: Chief Editor1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidate Script": {
+      "main": [
+        [
+          {
+            "node": "Init Loop (안전장치)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "YouTube Scraper (Competitors)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit Scraper (RSS)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Reddit Scraper (RSS)1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "YouTube Scraper (Competitors)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YouTube Scraper (Competitors)": {
+      "main": [
+        [
+          {
+            "node": "Format YouTube",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Reddit": {
+      "main": [
+        [
+          {
+            "node": "Merge Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format YouTube": {
+      "main": [
+        [
+          {
+            "node": "Merge Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Data": {
+      "main": [
+        [
+          {
+            "node": "Generate Final Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit Scraper (RSS)1": {
+      "main": [
+        [
+          {
+            "node": "Format Reddit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Final Report": {
+      "main": [
+        [
+          {
+            "node": "Define Search Topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o Mini (Editor)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent: Reviser (수정)1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bf4fc5c1-a897-4f03-aff9-2ca99a7c7ab7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4aae468442c323b9d7aeb70601530b18fe7dbbd836a0eb2623b1cb66bb4f0b2a"
+  },
+  "id": "TW7prR7zr4v2qPSA",
+  "tags": []
+}
